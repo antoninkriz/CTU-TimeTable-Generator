@@ -1,0 +1,42 @@
+[tool.poetry]
+name = "kos-loader"
+version = "0.1.0"
+description = ""
+license = "MIT"
+authors = ["Antonín Kříž <15214494+antoninkriz@users.noreply.github.com>"]
+readme = "README.md"
+packages = [{include = "kos_loader"}]
+
+[[tool.poetry.source]]
+name = "PyPI"
+priority = "primary"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+aiohttp = "^3.8.5"
+aiofiles = "^23.2.1"
+yarl = "^1.9.2"
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.7.0"
+isort = "^5.12.0"
+mypy = "^1.5.1"
+pylint = "^2.17.5"
+types-aiofiles = "^23.2.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 160
+target-version = ['py311']
+
+[tool.isort]
+line_length = 160
+
+[tool.pylint.main]
+jobs = 0
+
+[tool.pylint.messages_control]
+max-line-length = 160

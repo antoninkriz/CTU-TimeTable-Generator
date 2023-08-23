@@ -14,21 +14,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
-
-      - name: Setup
-        uses: ./.github/actions/setup
-        with:
-          python-version: 3.11.4
-          poetry-version: 1.5.1
-
   code_format:
     runs-on: ubuntu-22.04
-    needs: build
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
@@ -49,7 +36,6 @@ jobs:
 
   type_check:
     runs-on: ubuntu-22.04
-    needs: build
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
@@ -66,7 +52,6 @@ jobs:
 
   lint:
     runs-on: ubuntu-22.04
-    needs: build
     steps:
       - name: Check out repository
         uses: actions/checkout@v3

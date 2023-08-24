@@ -3,14 +3,14 @@ name: fetch-data
 on:
   workflow_dispatch:
   schedule:
-    - cron:  '0 11 * * *'
-    - cron:  '30 14 * * *'
-    - cron:  '0 18 * * *'
+    - cron: '0 11 * * *'
+    - cron: '30 14 * * *'
+    - cron: '0 18 * * *'
 
 jobs:
   fetch-data:
       runs-on: ubuntu-22.04
-      timeout-minutes: 15
+      timeout-minutes: 10
       steps:
       - name: Check out repository
         uses: actions/checkout@v3
@@ -27,11 +27,22 @@ jobs:
           KOS_USERNAME: ${{ secrets.KOS_USERNAME }}
           KOS_PASSWORD: ${{ secrets.KOS_PASSWORD }}
           LOGLEVEL: info
-        run: poetry run python3 -m kos_loader.kos_loader
+        run: poetry run python3 -m kos_loader.kos_loader build/data.json
 
       - name: 'Upload Artifact'
         uses: actions/upload-artifact@v3
         with:
           name: timetable-data
-          path: data.json
+          path: build/data.json
           retention-days: 3
+
+      - name: Push git subdirectory as branch
+        uses: s0/git-publish-subdir-action@v2.6.0
+        env:
+          REPO: self
+          BRANCH: data
+          FOLDER: build
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SKIP_EMPTY_COMMITS: true
+          COMMIT_NAME: 'GitHub Action by Antonín Kříž'
+          COMMIT_EMAIL: 'noreply@users.noreply.github.com'

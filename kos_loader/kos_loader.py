@@ -1,5 +1,6 @@
 """Main kos_loader module"""
 
+import sys
 import asyncio
 import dataclasses
 import datetime
@@ -7,6 +8,7 @@ import itertools
 import json
 import logging
 import os
+import pathlib
 from typing import Any, Callable, TypeVar
 
 import aiofiles
@@ -33,6 +35,20 @@ async def on_request_end(_: aiohttp.ClientSession, __: Any, params: aiohttp.Trac
     """Debug print for aiohttp client"""
     logging.debug("Request END: %s %s %s [%s]", params.method, params.url, params.headers, params.response.status)
 
+
+def get_output_file_path() -> pathlib.Path:
+    if len(sys.argv) != 2:
+        logger.error("This program needs exactly one argument with the path of the output file")
+        raise ValueError("Missing file path program argument")
+
+    path = pathlib.Path(sys.argv[1])
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    if not path.is_file() and not path.parent.exists:
+        logger.error("Invalid output file path")
+        raise ValueError("Invalid output file path")
+
+    return path
 
 @dataclasses.dataclass
 class User:
@@ -108,6 +124,7 @@ async def load_data(session: aiohttp.ClientSession, request: Request, parser: Ca
 
 async def main():
     """Main function"""
+    path = get_output_file_path()
     user = load_user()
     async with await kos_session(user) as session:
         logger.info("Downloading semesters")
@@ -144,7 +161,7 @@ async def main():
         logger.info("Writing the result to data.json")
         timer.start()
 
-        async with aiofiles.open("data.json", "w", encoding="utf-8") as file:
+        async with aiofiles.open(path, "w", encoding="utf-8") as file:
             await file.write(
                 json.dumps(
                     {

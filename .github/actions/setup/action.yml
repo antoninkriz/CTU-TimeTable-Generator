@@ -27,15 +27,17 @@ runs:
       id: cached-dependencies
       uses: actions/cache@v3
       with:
-        path: .venv
+        path: kos-loader/.venv
         key: python-${{ inputs.python-version }}-poetry-${{ inputs.poetry-version }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('.github/actions/setup/action.yml') }}
 
     - name: Install dependencies
+      working-directory: kos-loader
       if: steps.cached-dependencies.outputs.cache-hit != 'true'
       shell: bash
       run: poetry install --no-interaction --no-root
 
     - name: Install library
+      working-directory: kos-loader
       shell: bash
       run: poetry install --no-interaction
   

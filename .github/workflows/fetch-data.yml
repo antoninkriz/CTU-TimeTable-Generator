@@ -44,5 +44,5 @@ jobs:
           FOLDER: build
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SKIP_EMPTY_COMMITS: true
-          COMMIT_NAME: 'GitHub Action by Antonín Kříž'
-          COMMIT_EMAIL: 'noreply@users.noreply.github.com'
+          COMMIT_NAME: 'GitHub Action by antoninkriz'
+          COMMIT_EMAIL: 'github@users.noreply.github.com'

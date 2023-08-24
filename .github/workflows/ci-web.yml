@@ -19,7 +19,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: 'lts/latest'
+          node-version: 'lts/*'
           cache: 'yarn'
 
       - name: Install packages

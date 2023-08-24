@@ -38,5 +38,8 @@ line_length = 160
 [tool.pylint.main]
 jobs = 0
 
+[tool.pylint.design]
+max-locals = 20
+
 [tool.pylint.messages_control]
 max-line-length = 160

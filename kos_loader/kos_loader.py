@@ -1,6 +1,5 @@
 """Main kos_loader module"""
 
-import sys
 import asyncio
 import dataclasses
 import datetime
@@ -9,6 +8,7 @@ import json
 import logging
 import os
 import pathlib
+import sys
 from typing import Any, Callable, TypeVar
 
 import aiofiles
@@ -37,6 +37,7 @@ async def on_request_end(_: aiohttp.ClientSession, __: Any, params: aiohttp.Trac
 
 
 def get_output_file_path() -> pathlib.Path:
+    """Get path to the output file from the program argument and create the folder if it donesn't exist yet"""
     if len(sys.argv) != 2:
         logger.error("This program needs exactly one argument with the path of the output file")
         raise ValueError("Missing file path program argument")
@@ -44,11 +45,12 @@ def get_output_file_path() -> pathlib.Path:
     path = pathlib.Path(sys.argv[1])
     path.parent.mkdir(parents=True, exist_ok=True)
 
-    if not path.is_file() and not path.parent.exists:
+    if not path.is_file() and not path.parent.exists():
         logger.error("Invalid output file path")
         raise ValueError("Invalid output file path")
 
     return path
+
 
 @dataclasses.dataclass
 class User:
@@ -126,6 +128,7 @@ async def main():
     """Main function"""
     path = get_output_file_path()
     user = load_user()
+
     async with await kos_session(user) as session:
         logger.info("Downloading semesters")
         timer.start()
@@ -151,10 +154,8 @@ async def main():
         logger.info("Downloaded data in %s", timer)
 
         logger.info("Matching parallels and courses")
-
         par_curr_by_course = {k: list(v) for k, v in itertools.groupby(par_curr, lambda p: p.course_id)}
         par_next_by_course = {k: list(v) for k, v in itertools.groupby(par_next, lambda p: p.course_id)}
-
         courses_curr = [dataclasses.replace(c, parallels=par_curr_by_course[c.course_id]) for c in courses if c.course_id in par_curr_by_course]
         courses_next = [dataclasses.replace(c, parallels=par_next_by_course[c.course_id]) for c in courses if c.course_id in par_next_by_course]
 

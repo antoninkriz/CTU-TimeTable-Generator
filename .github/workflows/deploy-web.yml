@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: 'lts/*'
           cache: 'yarn'
-          cache-dependency-path: ctu-timetable-generator/yarn.json
+          cache-dependency-path: ctu-timetable-generator/yarn.lock
 
       - name: Install packages
         working-directory: ctu-timetable-generator

@@ -22,6 +22,7 @@ jobs:
           poetry-version: 1.5.1
   
       - name: Fetch data
+        working-directory: kos-loader
         shell: bash
         env:
           KOS_USERNAME: ${{ secrets.KOS_USERNAME }}
@@ -33,7 +34,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: timetable-data
-          path: build/data.json
+          path: kos-loader/build/data.json
           retention-days: 3
 
       - name: Push git subdirectory as branch
@@ -41,7 +42,7 @@ jobs:
         env:
           REPO: self
           BRANCH: data
-          FOLDER: build
+          FOLDER: kos-loader/build
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SKIP_EMPTY_COMMITS: true
           COMMIT_NAME: 'GitHub Action by antoninkriz'

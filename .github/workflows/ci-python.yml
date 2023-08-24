@@ -3,7 +3,6 @@ name: ci-python
 on:
   push:
     branches:
-      - master
       - main
   pull_request:
     branches:
@@ -27,10 +26,12 @@ jobs:
           poetry-version: 1.5.1
 
       - name: Black
+        working-directory: kos-loader
         shell: bash
         run: poetry run black --check ./kos_loader
 
       - name: isort
+        working-directory: kos-loader
         shell: bash
         run: poetry run isort --check ./kos_loader
 
@@ -47,6 +48,7 @@ jobs:
           poetry-version: 1.5.1
 
       - name: Mypy - type checking
+        working-directory: kos-loader
         shell: bash
         run: poetry run mypy ./kos_loader
 
@@ -63,5 +65,6 @@ jobs:
           poetry-version: 1.5.1
 
       - name: PyLint - linter
+        working-directory: kos-loader
         shell: bash
         run: poetry run pylint ./kos_loader

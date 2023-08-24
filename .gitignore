@@ -2,3 +2,7 @@ __pycache__/
 .mypy_cache
 .venv
 .env
+node_modules/
+.idea
+.vscode
+out/

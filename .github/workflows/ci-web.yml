@@ -1,0 +1,33 @@
+name: CI for Web
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - "**"
+
+jobs:
+  lint:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 'lts/latest'
+          cache: 'yarn'
+
+      - name: Install packages
+        working-directory: ctu-timetable-generator
+        run: |
+          yarn install --pure-lockfile
+
+      - name: Lint
+        working-directory: ctu-timetable-generator
+        run: |
+          yarn run lint

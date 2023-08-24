@@ -1,11 +1,16 @@
-name: fetch-data
+name: Data downloader
 
 on:
   workflow_dispatch:
   schedule:
+    - cron: '0 7 * * *'
+    - cron: '0 9 * * *'
     - cron: '0 11 * * *'
-    - cron: '30 14 * * *'
-    - cron: '0 18 * * *'
+    - cron: '0 13 * * *'
+    - cron: '0 15 * * *'
+    - cron: '0 17 * * *'
+    - cron: '0 19 * * *'
+    - cron: '0 21 * * *'
 
 jobs:
   fetch-data:

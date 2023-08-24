@@ -1,0 +1,45 @@
+{
+  "name": "ctu-timetable-generator",
+  "version": "0.1.0",
+  "private": true,
+  "author": "Antonin Kriz (antoninkriz.eu)",
+  "homepage": "https://github.com/antoninkriz/CTU-TimeTable-Generator",
+  "description": "CTU TimeTable Generator Web App",
+  "keywords": [
+    "timetable",
+    "schedule",
+    "university",
+    "website",
+    "CVUT",
+    "CTU"
+  ],
+  "scripts": {
+    "dev": "rm -rf .next && next dev",
+    "build-analyze": "ANALYZE=true yarn build",
+    "build": "NODE_ENV=production next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "13.4.19",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "styled-components": "^6.0.7"
+  },
+  "devDependencies": {
+    "@next/bundle-analyzer": "^13.4.12",
+    "@types/node": "20.5.4",
+    "@types/react": "18.2.21",
+    "@types/react-dom": "18.2.7",
+    "@typescript-eslint/eslint-plugin": "^6.2.1",
+    "@typescript-eslint/parser": "^6.2.1",
+    "eslint": "8.47.0",
+    "eslint-config-airbnb": "^19.0.4",
+    "eslint-config-airbnb-typescript": "^17.1.0",
+    "eslint-config-next": "13.4.19",
+    "eslint-config-prettier": "^8.10.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "prettier": "^3.0.1",
+    "typescript": "^5.1.6"
+  }
+}

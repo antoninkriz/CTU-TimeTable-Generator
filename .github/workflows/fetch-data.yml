@@ -1,54 +1,54 @@
-name: Data downloader
+name: Fetch data
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 7 * * *'
-    - cron: '0 9 * * *'
-    - cron: '0 11 * * *'
-    - cron: '0 13 * * *'
-    - cron: '0 15 * * *'
-    - cron: '0 17 * * *'
-    - cron: '0 19 * * *'
-    - cron: '0 21 * * *'
+    - cron: '0 */2 * * *'
 
 jobs:
   fetch-data:
-      runs-on: ubuntu-22.04
-      timeout-minutes: 10
-      steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
-  
-      - name: Setup
-        uses: ./.github/actions/setup
-        with:
-          python-version: 3.11.4
-          poetry-version: 1.5.1
-  
-      - name: Fetch data
-        working-directory: kos-loader
-        shell: bash
-        env:
-          KOS_USERNAME: ${{ secrets.KOS_USERNAME }}
-          KOS_PASSWORD: ${{ secrets.KOS_PASSWORD }}
-          LOGLEVEL: info
-        run: poetry run python3 -m kos_loader.kos_loader build/data.json
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: true
 
-      - name: 'Upload Artifact'
-        uses: actions/upload-artifact@v3
-        with:
-          name: timetable-data
-          path: kos-loader/build/data.json
-          retention-days: 3
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v3
 
-      - name: Push git subdirectory as branch
-        uses: s0/git-publish-subdir-action@v2.6.0
-        env:
-          REPO: self
-          BRANCH: data
-          FOLDER: kos-loader/build
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SKIP_EMPTY_COMMITS: true
-          COMMIT_NAME: 'GitHub Action by antoninkriz'
-          COMMIT_EMAIL: 'github@users.noreply.github.com'
+    - name: Setup
+      uses: ./.github/actions/setup-python-poetry
+      with:
+        python-version: 3.11.4
+        poetry-version: 1.5.1
+        path: kos-laoder
+
+    - name: Fetch data
+      working-directory: kos-loader
+      shell: bash
+      env:
+        KOS_USERNAME: ${{ secrets.KOS_USERNAME }}
+        KOS_PASSWORD: ${{ secrets.KOS_PASSWORD }}
+        LOGLEVEL: info
+      run: poetry run python3 -m kos_loader.kos_loader build/data.json
+
+    - name: 'Upload Artifact'
+      uses: actions/upload-artifact@v3
+      with:
+        name: timetable-data
+        path: kos-loader/build/data.json
+        retention-days: 3
+
+    - name: Push git subdirectory as branch
+      uses: s0/git-publish-subdir-action@v2.6.0
+      env:
+        REPO: self
+        BRANCH: data
+        FOLDER: kos-loader/build
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SKIP_EMPTY_COMMITS: true
+        SQUASH_HISTORY: true
+        COMMIT_NAME: 'github-actions[bot]'
+        COMMIT_EMAIL: 'github-actions[bot]@users.noreply.github.com'

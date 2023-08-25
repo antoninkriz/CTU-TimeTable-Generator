@@ -1,5 +1,5 @@
-name: Setup
-description: Setup the repository, Python and dependencies
+name: Setup Python and Poetry
+
 inputs:
   python-version:
     required: true
@@ -7,6 +7,10 @@ inputs:
   poetry-version:
     required: true
     description: "Poetry version"
+  path:
+    required: false
+    description: "Relativa path where the action should run"
+
 runs:
   using: composite
   steps:
@@ -27,17 +31,17 @@ runs:
       id: cached-dependencies
       uses: actions/cache@v3
       with:
-        path: kos-loader/.venv
+        path: ${{ inputs.path }}/.venv
         key: python-${{ inputs.python-version }}-poetry-${{ inputs.poetry-version }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('.github/actions/setup/action.yml') }}
 
     - name: Install dependencies
-      working-directory: kos-loader
+      working-directory: ${{ inputs.path }}
       if: steps.cached-dependencies.outputs.cache-hit != 'true'
       shell: bash
       run: poetry install --no-interaction --no-root
 
     - name: Install library
-      working-directory: kos-loader
+      working-directory: ${{ inputs.path }}
       shell: bash
       run: poetry install --no-interaction
   

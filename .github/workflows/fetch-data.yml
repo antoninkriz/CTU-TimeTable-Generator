@@ -23,7 +23,7 @@ jobs:
       with:
         python-version: 3.11.4
         poetry-version: 1.5.1
-        path: kos-laoder
+        path: kos-loader
 
     - name: Fetch data
       working-directory: kos-loader

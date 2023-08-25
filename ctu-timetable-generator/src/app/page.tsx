@@ -13,6 +13,7 @@ import {
 import {
   Link,
 } from '@chakra-ui/next-js';
+import NextLink from 'next/link';
 import {
   IoHeart,
 } from 'react-icons/io5';
@@ -74,7 +75,7 @@ export default function Index() {
             </Text>
           </Stack>
           <Stack direction="column" spacing={3} align="center" alignSelf="center" position="relative">
-            <Link href="/generator">
+            <Link href="/generator" as={NextLink}>
               <Button px={8} py={6} fontFamily="monospace" as="span">
                 SPUSTIT APPKU
               </Button>

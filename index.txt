@@ -1,4 +1,4 @@
-0:["1FzjrixXAQF91SqST8fQ3",[[["",{"children":["__PAGE__",{}]},"$undefined","$undefined",true],"$L1",[[],"$L2"]]]]
+0:["6bKY8Ey53lnAyjqXRTk2x",[[["",{"children":["__PAGE__",{}]},"$undefined","$undefined",true],"$L1",[[],"$L2"]]]]
 3:I{"id":7767,"chunks":["272:static/chunks/webpack-bf1a64d1eafd2816.js","971:static/chunks/fd9d1056-a99b58d3cc150217.js","596:static/chunks/596-f1550b9de460682c.js"],"name":"default","async":false}
 4:I{"id":7920,"chunks":["272:static/chunks/webpack-bf1a64d1eafd2816.js","971:static/chunks/fd9d1056-a99b58d3cc150217.js","596:static/chunks/596-f1550b9de460682c.js"],"name":"default","async":false}
 2:[["$","meta","0",{"charSet":"utf-8"}],["$","title","1",{"children":"CTU TimeTable Generator"}],["$","meta","2",{"name":"description","content":"Najdi svůj optimální rozvrh bez složitého hledání vhodných paralelek, přednášek, cvičení a předmětů."}],["$","meta","3",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]

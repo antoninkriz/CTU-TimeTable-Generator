@@ -8,6 +8,9 @@ on:
 jobs:
   deployment:
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+      pages: write
     strategy:
       fail-fast: true
 

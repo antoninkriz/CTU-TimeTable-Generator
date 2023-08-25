@@ -30,11 +30,19 @@ class Semester(CanExclude):
         return self.__dict__
 
 
+class OddEvenWeek(enum.StrEnum):
+    """Specifies the odd/event week of a time table event"""
+
+    EVEN = "S"
+    ODD = "L"
+
+
 @dataclasses.dataclass
 class TimeTable(CanExclude):
-    """Clas representing a single TimeTable event"""
+    """Class representing a single TimeTable event"""
 
     day: int
+    week: Optional[OddEvenWeek]
     start: tuple[int, int]
     end: tuple[int, int]
     room: Optional[str]
@@ -114,6 +122,7 @@ def parse_parallel(par: dict[str, Any]) -> Parallel:
         timetable=[
             TimeTable(
                 day=t["dayNumber"],
+                week=t.get("evenOddWeek"),
                 start=str_to_time_tuple(t["ticketStart"]),
                 end=str_to_time_tuple(t["ticketEnd"]),
                 room=t["room"]["roomNumber"] if "room" in t else None,

@@ -50,7 +50,6 @@ function DataComponent({
   return (
     <Text>Dostupné semestry: {result?.toString() || (
     <Button onClick={() => {
-      console.time('hello');
       postMessage({ classes: [], semesters: data });
     }}
     >LOAD

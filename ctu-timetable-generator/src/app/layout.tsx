@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 
 import Nav from '@src/components/nav';
+import { BASE_URL } from '@src/consts';
 import { Providers } from './providers';
 
 export default function RootLayout({
@@ -29,7 +30,7 @@ export default function RootLayout({
         <meta property="og:description" content="Najdi svůj optimální rozvrh bez složitého hledání vhodných paralelek, přednášek, cvičení a předmětů." />
         <meta property="og:url" content="https://antoninkriz.github.io/CTU-TimeTable-Generator/" />
         <meta property="og:type" content="website" />
-        <meta property="og:image" content="/CTU-TimeTable-Generator/favicon-512x512.png" />
+        <meta property="og:image" content={`${BASE_URL}/CTU-TimeTable-Generator/favicon-512x512.png`} />
         <meta property="og:image:alt" content="Logo for CTU TimeTable Generator" />
         <meta property="og:image:width" content="512" />
         <meta property="og:image:height" content="512" />

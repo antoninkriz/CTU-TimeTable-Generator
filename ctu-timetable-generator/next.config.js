@@ -13,6 +13,9 @@ module.exports = (/** @type {string} */ phase) => {
   /** @type {import('next').NextConfig} */
   return withBundleAnalyzer({
     basePath: isDev ? undefined : '/CTU-TimeTable-Generator',
+    images: {
+      unoptimized: true,
+    },
     output: 'export',
     reactStrictMode: true,
     swcMinify: !isDev,

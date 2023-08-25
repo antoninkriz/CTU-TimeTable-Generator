@@ -12,7 +12,6 @@ import {
 import {
   Link,
 } from '@chakra-ui/next-js';
-import NextLink from 'next/link';
 import { IoLogoGithub, IoMoonSharp, IoSunnySharp } from 'react-icons/io5';
 import { GITHUB_URL } from '@src/consts';
 
@@ -23,7 +22,7 @@ export default function Nav() {
       <Box bg={useColorModeValue('gray.100', 'gray.900')} px={4}>
         <Flex h={16} alignItems="center" justifyContent="space-between">
           <Box fontFamily="monospace">
-            <Link href="/" as={NextLink}><Button fontSize="xl" as="span">[TTG]</Button></Link>
+            <Link href="/"><Button fontSize="xl" as="span">[TTG]</Button></Link>
           </Box>
 
           <Flex alignItems="center">

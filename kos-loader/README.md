@@ -34,29 +34,34 @@ Example:
 
 ```json
 {
+    // Code of a semester
     "B231": [
         {
+            // Course code, should be unique among all courses
             "code": "BI-QAP",
-            "course_id": 6809806,
+            // Name of the class in Czech, or English if Czech is not available, or null
             "name": "Kvantové algoritmy a programování",
             "parallels": [
                 {
+                    // Parallel capacity or null
                     "capacity": 32,
-                    "course_id": 6809806,
-                    // Parallel number
+                    // Parallel number or null
                     "num": 101,
-                    "parallel_id": 1246680571005,
-                    "semester": "B231",
+                    // List of all events of a given parallel, this shouldn't be empty
                     "timetable": [
                         {
                             // Days indexed from 1 -> 4 = Thursday
                             "day": 4,
+                            // L, S or null for odd, even and both types of weeks classes
+                            "week": "L",
+                            // Room code, this should correctly indentify a room, or null
+                            "room": "TH:A-s135",
                             // Time in the [HH, mm] format
                             "end": [
                                 13,
                                 30
                             ],
-                            "room": "TH:A-s135",
+                            // Time in the [HH, mm] format
                             "start": [
                                 11,
                                 0

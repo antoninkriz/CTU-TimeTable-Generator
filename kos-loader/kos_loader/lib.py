@@ -4,6 +4,8 @@ import dataclasses
 import json
 import time
 
+from kos_loader.requests import CanExclude
+
 
 class Timer:
     """Timer class to measure run time"""
@@ -32,6 +34,8 @@ class JSONEncoder(json.JSONEncoder):
     """Custom JSON Encode class to help serializing unknown types"""
 
     def default(self, o):
+        if issubclass(type(o), CanExclude):
+            return o.dict_factory()
         if dataclasses.is_dataclass(o):
             return dataclasses.asdict(o)
         return super().default(o)

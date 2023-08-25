@@ -1,5 +1,6 @@
 """Module with requests API models and helper functions for parsin the API responses"""
 
+import abc
 import dataclasses
 import datetime
 import enum
@@ -8,14 +9,38 @@ from typing import Any, Optional, TypedDict
 from kos_loader.consts import KOS_API
 
 
+class CanExclude:
+    """Abstract class to force implementation of custom dict_factory"""
+
+    @abc.abstractmethod
+    def dict_factory(self) -> dict[str, Any]:
+        """Creates dict out of a class in its own way"""
+
+
 @dataclasses.dataclass
-class Semester:
+class Semester(CanExclude):
     """Class representing information about a single Semester"""
 
     semester_id: str
     name: str
     start: datetime.date
     end: datetime.date
+
+    def dict_factory(self) -> dict[str, Any]:
+        return self.__dict__
+
+
+@dataclasses.dataclass
+class TimeTable(CanExclude):
+    """Clas representing a single TimeTable event"""
+
+    day: int
+    start: tuple[int, int]
+    end: tuple[int, int]
+    room: Optional[str]
+
+    def dict_factory(self) -> dict[str, Any]:
+        return self.__dict__
 
 
 class ParallelType(enum.StrEnum):
@@ -27,17 +52,7 @@ class ParallelType(enum.StrEnum):
 
 
 @dataclasses.dataclass
-class TimeTable:
-    """Clas representing a single TimeTable event"""
-
-    day: int
-    start: tuple[int, int]
-    end: tuple[int, int]
-    room: Optional[str]
-
-
-@dataclasses.dataclass
-class Parallel:
+class Parallel(CanExclude):
     """Class representing a single Parallel and its TimeTable events"""
 
     parallel_id: int
@@ -48,15 +63,27 @@ class Parallel:
     capacity: Optional[int]
     timetable: list[TimeTable]
 
+    def dict_factory(self) -> dict[str, Any]:
+        res = self.__dict__
+        res.pop("parallel_id")
+        res.pop("course_id")
+        res.pop("semester")
+        return res
+
 
 @dataclasses.dataclass
-class Course:
+class Course(CanExclude):
     """Class represeting a single Course and its Parallels"""
 
     course_id: int
     code: str
     name: str
     parallels: list[Parallel]
+
+    def dict_factory(self) -> dict[str, Any]:
+        res = self.__dict__
+        res.pop("course_id")
+        return res
 
 
 def parse_semester(sem: dict[str, Any]) -> Semester:

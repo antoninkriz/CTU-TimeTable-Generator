@@ -28,6 +28,7 @@
         "ignoreTemplateLiterals": true
       }
     ],
+    "import/prefer-default-export": "off",
     "no-nested-ternary": "off",
     "no-bitwise": "off",
     "no-plusplus": "off",

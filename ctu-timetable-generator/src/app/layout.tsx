@@ -1,18 +1,26 @@
-import type { Metadata } from 'next';
+'use client';
 
-export const metadata: Metadata = {
-  title: 'CTU TimeTable Generator',
-  description: 'Najdi svůj optimální rozvrh bez složitého hledání vhodných paralelek, přednášek, cvičení a předmětů.',
-};
+import type { ReactNode } from 'react';
+
+import Nav from '@src/components/nav';
+import { Providers } from './providers';
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: ReactNode;
 }) {
   return (
     <html lang="cs">
-      <body>{children}</body>
+      <head>
+        <title>CTU TimeTable Generator</title>
+      </head>
+      <body>
+        <Providers>
+          <Nav />
+          {children}
+        </Providers>
+      </body>
     </html>
   );
 }

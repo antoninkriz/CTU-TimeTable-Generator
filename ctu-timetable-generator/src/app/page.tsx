@@ -33,6 +33,7 @@ export default function Index() {
             ? <Text>Vytvoř si svůj optimální rozvrh hodin!</Text>
           </Heading>
           <Stack as={Box} textAlign="center">
+            <Text>Najdi svůj optimální rozvrh bez složitého hledání vhodných paralelek, přednášek, cvičení a samotných předmětů!</Text>
             <Text>Každého studenta již od pradávna jistě trápí stejná otázka:</Text>
             <Text color={yellow} fontWeight="600" as="span">
               „Jak nechodit do školy a zároveň si odnést titul?“
@@ -74,7 +75,7 @@ export default function Index() {
           </Stack>
           <Stack direction="column" spacing={3} align="center" alignSelf="center" position="relative">
             <Link href="/generator">
-              <Button px={8} py={6} fontFamily="monospace">
+              <Button px={8} py={6} fontFamily="monospace" as="span">
                 SPUSTIT APPKU
               </Button>
             </Link>

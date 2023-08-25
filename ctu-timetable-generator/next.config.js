@@ -13,6 +13,7 @@ module.exports = (/** @type {string} */ phase) => {
   /** @type {import('next').NextConfig} */
   return withBundleAnalyzer({
     basePath: isDev ? undefined : '/CTU-TimeTable-Generator',
+    skipTrailingSlashRedirect: true,
     images: {
       unoptimized: true,
     },

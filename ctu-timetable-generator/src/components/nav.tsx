@@ -1,5 +1,6 @@
 'use client';
 
+import { useContext } from 'react';
 import {
   Box,
   Button,
@@ -13,18 +14,24 @@ import {
   Link,
 } from '@chakra-ui/next-js';
 import NextLink from 'next/link';
-import { IoLogoGithub, IoMoonSharp, IoSunnySharp } from 'react-icons/io5';
+import {
+  IoLogoGithub, IoMoonSharp, IoSunnySharp, IoMenu,
+} from 'react-icons/io5';
 import { GITHUB_URL } from '@src/consts';
+import { DrawerContext } from '@src/lib';
 
 export default function Nav() {
   const { colorMode, toggleColorMode } = useColorMode();
+  const { onToggle } = useContext(DrawerContext);
+
   return (
     <>
       <Box bg={useColorModeValue('gray.100', 'gray.900')} px={4}>
         <Flex h={16} alignItems="center" justifyContent="space-between">
-          <Box fontFamily="monospace">
-            <Link href="/" as={NextLink}><Button fontSize="xl" as="span">[TTG]</Button></Link>
-          </Box>
+          <Stack direction="row" spacing={3}>
+            <Button onClick={onToggle} display={{ xl: 'none' }}><Icon as={IoMenu} boxSize={6} /></Button>
+            <Link href="/" as={NextLink} fontFamily="mono"><Button fontSize="xl" as="span">[TTG]</Button></Link>
+          </Stack>
 
           <Flex alignItems="center">
             <Stack direction="row" spacing={3}>

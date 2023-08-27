@@ -32,6 +32,7 @@
     "no-nested-ternary": "off",
     "no-bitwise": "off",
     "no-plusplus": "off",
+    "no-param-reassign": "off",
     "no-restricted-syntax": [
       "error",
       "ForInStatement",

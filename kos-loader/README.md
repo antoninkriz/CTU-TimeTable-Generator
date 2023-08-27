@@ -45,7 +45,7 @@ Example:
                 {
                     // Parallel capacity or null
                     "capacity": 32,
-                    // Parallel number or null
+                    // Parallel number, should not be null but I can't promise anything
                     "num": 101,
                     // List of all events of a given parallel, this shouldn't be empty
                     "timetable": [

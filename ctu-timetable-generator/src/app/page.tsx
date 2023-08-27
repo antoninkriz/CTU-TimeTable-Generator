@@ -21,6 +21,7 @@ import { GITHUB_URL, PERSONAL_URL } from '@src/consts';
 
 export default function Index() {
   const yellow = useColorModeValue('yellow.500', 'yellow.400');
+  const blueLink = useColorModeValue('blue.700', 'blue.300');
 
   return (
     <>
@@ -40,7 +41,7 @@ export default function Index() {
               „Jak nechodit do školy a zároveň si odnést titul?“
             </Text>
           </Stack>
-          <Stack as={Box} textAlign="justify" py={{ base: 8 }} pt={0}>
+          <Stack as={Box} textAlign="justify" py={8} pt={0}>
             <Text>
               Mnoho studentů již odpvoěď hledalo, ne mnoho z nás ji ale našlo. Ať proto, že jsou <Text as="i">rok od roku línější a hloupější</Text>, či proto,
               že chtějí pracovat. Však Ty je určitě musíš znáš stejně nejlíp.
@@ -70,13 +71,13 @@ export default function Index() {
             </Text>
             <Text>
               V mezičase se mi neboj poslat srdíčko
-              na <Text as="span" whiteSpace="nowrap"><Link href={GITHUB_URL} fontWeight="600" target="_blank">GitHubu</Link> <Icon as={IoHeart} boxSize={4} color="red.500" /></Text>,
-              nebo koukni na <Link href={PERSONAL_URL} fontWeight="600" target="_blank">můj web</Link> (tímhle odkazem si určitě zlepšuju SEO).
+              na <Text as="span" whiteSpace="nowrap"><Link href={GITHUB_URL} color={blueLink} fontWeight="600" target="_blank">GitHubu</Link> <Icon as={IoHeart} boxSize={4} color="red.500" /></Text>,
+              nebo koukni na <Link href={PERSONAL_URL} color={blueLink} fontWeight="600" target="_blank">můj web</Link> (moc tam toho není, ale tímhle odkazem si určitě zlepšuju SEO).
             </Text>
           </Stack>
           <Stack direction="column" spacing={3} align="center" alignSelf="center" position="relative">
             <Link href="/generator" as={NextLink}>
-              <Button px={8} py={6} fontFamily="monospace" as="span">
+              <Button px={8} py={6} fontFamily="mono" as="span">
                 SPUSTIT APPKU
               </Button>
             </Link>

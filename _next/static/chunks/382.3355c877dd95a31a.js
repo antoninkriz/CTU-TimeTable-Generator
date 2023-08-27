@@ -1,1 +1,0 @@
-!function(){"use strict";let e=e=>postMessage(e);addEventListener("message",async t=>{let s=10;e({rand:10});let a=setInterval(()=>{s>0?e({rand:--s}):(e({result:Object.keys(t.data.semesters)}),clearInterval(a))},250)})}(),_N_E={};

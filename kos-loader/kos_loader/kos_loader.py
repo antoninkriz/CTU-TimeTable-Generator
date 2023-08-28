@@ -154,9 +154,8 @@ async def main():
         logger.info("Downloaded data in %s", timer)
 
         logger.info("Matching parallels and courses")
-        by_course_id = lambda p: p.course_id
-        par_curr_by_course = {k: list(v) for k, v in itertools.groupby(sorted(par_curr, key=by_course_id), by_course_id)}
-        par_next_by_course = {k: list(v) for k, v in itertools.groupby(sorted(par_next, key=by_course_id), by_course_id)}
+        par_curr_by_course = {k: list(v) for k, v in itertools.groupby(sorted(par_curr, key=lambda p: p.course_id), lambda p: p.course_id)}
+        par_next_by_course = {k: list(v) for k, v in itertools.groupby(sorted(par_next, key=lambda p: p.course_id), lambda p: p.course_id)}
         courses_curr = [dataclasses.replace(c, parallels=par_curr_by_course[c.course_id]) for c in courses if c.course_id in par_curr_by_course]
         courses_next = [dataclasses.replace(c, parallels=par_next_by_course[c.course_id]) for c in courses if c.course_id in par_next_by_course]
 

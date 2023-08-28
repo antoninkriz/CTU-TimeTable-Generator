@@ -36,6 +36,7 @@ function timeTableAddParallel(
       continue;
     }
 
+    // TODO: Fix time compare type + logic
     let success = false;
     for (const lle of singleDay) {
       if (lle.value.start >= eventNew.end) {
@@ -131,7 +132,10 @@ function experimental(
     }
 
     // Cleanup events from the current parallel in the timetable
-    for (const added of addedNodes) added.length = 0;
+    for (let i = 0; i < addedNodes.length; i++) {
+      for (const added of addedNodes[i]) timetable[i].remove(added);
+      addedNodes[i].length = 0;
+    }
   }
 }
 

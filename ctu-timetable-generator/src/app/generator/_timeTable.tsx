@@ -1,8 +1,9 @@
 import {
-  Box, Card, CardBody, CardFooter, CardHeader, Center, Divider, Heading, HStack, Text, useColorModeValue, VStack,
+  Box, Button, Card, CardBody, CardFooter, CardHeader, Center, Container, Divider, Heading, HStack, Icon, Text, useColorModeValue, VStack,
 } from '@chakra-ui/react';
 import type { MessageResult } from '@src/types';
 import { MessageResultTypes, ParallelType, WeekType } from '@src/types';
+import { IoArrowBack, IoArrowForward } from 'react-icons/io5';
 
 type TimeTableUIEvent = {
   course: string,
@@ -70,7 +71,7 @@ function Row({ events, day }: { events: TimeTableUIEvent[], day: number }) {
             </CardHeader>
             <CardBody />
             <CardFooter p={1} pt={0}>
-              <Box fontSize="2xs" width="full" fontFamily="mono">
+              <Box fontSize="2xs" width="full">
                 <Text flex={1}>{event.startText} - {event.endText}</Text>
                 <Text>{event.num ?? ' '}</Text>
               </Box>
@@ -82,7 +83,17 @@ function Row({ events, day }: { events: TimeTableUIEvent[], day: number }) {
   );
 }
 
-export function TimeTable({ result } : { result: MessageResult }) {
+export function TimeTable({
+  result,
+  variant,
+  nextVariant,
+  prevVariant,
+} : {
+  result: MessageResult,
+  variant: number,
+  nextVariant: () => void,
+  prevVariant: () => void,
+}) {
   if (result.type !== MessageResultTypes.RESULT) return undefined;
 
   const data = result.data.map((x) => Object.entries(x).reduce((arrAll, [code, bestParallels]) => {
@@ -120,30 +131,60 @@ export function TimeTable({ result } : { result: MessageResult }) {
     return obj;
   }, {} as { [day: number]: Array<TimeTableUIEvent> }));
 
-  if (data.length === 0) return ':(';
+  if (data.length === 0) {
+    return (
+      <Center h="full" w="full">
+        <Container textAlign="center">
+          <VStack spacing={4}>
+            <Heading fontSize="2xl">Nenalezen žádný rozvrh, který by neobsahoval kolize<br />😥</Heading>
+            <Text as="i">
+              Pronikl jsem vpřed v čase a zahlédl jsem všech {result.total} {result.total >= 5 ? 'možných' : result.total >= 2 ? 'možné' : 'možnou'}{' '}
+              budoucnost{result.total >= 2 ? 'i' : ''}, abych zjistil, jak bude vypadat tvůj semestr.
+              Ani jedna možnost nebyla bez kolizí.
+            </Text>
+            <Text>
+              Zkus zvolit méně předmětů, zakázat přednášky, cvičení či laboratoře u předmětů, které tě třeba tolik nezajímají, a nebo si přiznat, že tenhle
+              semestr bude holt patřit mezi ty náročnější.
+            </Text>
+          </VStack>
+        </Container>
+      </Center>
+    );
+  }
 
   return (
-    <Center h="full" w="full">
-      <Box m={{ base: 0, lg: 6 }} w="full">
-        <Heading fontSize="lg" m={4}>Lichý týden</Heading>
-        <Box pos="relative" mt={8}>
-          <Box w="stretch" h="full" pos="absolute" ml={8}>
-            {range(8, 20).map((i) => <Line key={i} time={i * 60} />)}
+    <>
+      <Center h="full" w="full" flexDirection="column">
+        <HStack w="full" justifyContent="space-around" px={8}>
+          <Button onClick={prevVariant} isDisabled={variant === 0}>
+            <Icon as={IoArrowBack} />
+          </Button>
+          <Text fontFamily="mono">Rozvrh #{variant + 1} / {data.length}</Text>
+          <Button onClick={nextVariant} isDisabled={variant === data.length - 1}>
+            <Icon as={IoArrowForward} />
+          </Button>
+        </HStack>
+        <Box mx={{ base: 0, lg: 6 }} w="full">
+          <Heading fontSize="lg" mx={4} mt={4}>Lichý týden</Heading>
+          <Box pos="relative" mt={6}>
+            <Box w="stretch" h="full" pos="absolute" ml={8}>
+              {range(8, 20).map((i) => <Line key={i} time={i * 60} />)}
+            </Box>
+            {range(0, 5).map((i) => (
+              <Row key={i} events={data[variant][i] ?? []} day={i} />
+            ))}
           </Box>
-          {range(0, 5).map((i) => (
-            <Row key={i} events={data[0][i] ?? []} day={i} />
-          ))}
-        </Box>
-        <Heading fontSize="lg" m={4}>Sudý týden</Heading>
-        <Box pos="relative" mt={8}>
-          <Box w="stretch" h="full" pos="absolute" ml={8}>
-            {range(8, 20).map((i) => <Line key={i} time={i * 60} />)}
+          <Heading fontSize="lg" mx={4} mt={4}>Sudý týden</Heading>
+          <Box pos="relative" mt={6}>
+            <Box w="stretch" h="full" pos="absolute" ml={8}>
+              {range(8, 20).map((i) => <Line key={i} time={i * 60} />)}
+            </Box>
+            {range(5, 10).map((i) => (
+              <Row key={i} events={data[variant][i] ?? []} day={i} />
+            ))}
           </Box>
-          {range(5, 10).map((i) => (
-            <Row key={i} events={data[0][i] ?? []} day={i} />
-          ))}
         </Box>
-      </Box>
-    </Center>
+      </Center>
+    </>
   );
 }

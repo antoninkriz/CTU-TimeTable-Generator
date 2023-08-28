@@ -31,6 +31,7 @@ function useDataWorker(): [MessageResult, (params: MessageData) => void] {
 export default function Generator() {
   const dataResponse = useToastDataWrapper();
 
+  const [variant, setVariant] = useState(0);
   const [isComputing, setIsComputing] = useState(false);
   const [result, postMessage] = useDataWorker();
   const [semester, setSemester] = useState<string | undefined>(undefined);
@@ -66,11 +67,20 @@ export default function Generator() {
   const computeCallback = () => {
     if (dataResponse.data && semester) {
       setIsComputing(true);
+      setVariant(0);
       postMessage({
         semester: dataResponse.data[semester],
         preferences,
       });
     }
+  };
+
+  const nextVariant = () => {
+    if (result.type === MessageResultTypes.RESULT && variant < result.data.length - 1) setVariant(variant + 1);
+  };
+
+  const prevVariant = () => {
+    if (variant > 0) setVariant(variant - 1);
   };
 
   if (isComputing && result.type === MessageResultTypes.RESULT) setIsComputing(false);
@@ -92,7 +102,7 @@ export default function Generator() {
           {
             result.type !== MessageResultTypes.RESULT
               ? <ProgressBar result={result} />
-              : <TimeTable result={result} />
+              : <TimeTable result={result} variant={variant} nextVariant={nextVariant} prevVariant={prevVariant} />
           }
         </Box>
       </Flex>

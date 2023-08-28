@@ -85,7 +85,7 @@ addEventListener('message', async (event: MessageEvent<MessageData>) => {
   }
 
   function mapToCourses(parallels: (Parallel | undefined)[]) {
-    return Object.keys(event.data.preferences).reduce((obj, courseId, i) => {
+    return coursesSelected.map((course) => course.code).reduce((obj, courseId, i) => {
       obj[courseId] = {
         [ParallelType.Lecture]: parallels[i * 3],
         [ParallelType.Tutorial]: parallels[i * 3 + 1],
@@ -98,7 +98,7 @@ addEventListener('message', async (event: MessageEvent<MessageData>) => {
   // Send result
   sendMessage({
     type: MessageResultTypes.RESULT,
-    data: bests.map(unwrapFilteredParallels).map(mapToCourses),
+    data: bests.parallels.map(unwrapFilteredParallels).map(mapToCourses),
     total,
     done: total,
   });

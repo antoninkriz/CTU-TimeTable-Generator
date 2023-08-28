@@ -1,88 +1,138 @@
+import { LinkedList, LinkedListNode, ProgressMeter } from '@src/app/generator/_worker/lib';
 import {
   MessageResultTypes, type MessageResult, type ParallelCompact, type EventCompact,
 } from '@src/types';
 
-function* lazyProduct<T>(sets: Array<Array<T>>) {
-  const p: T[] = [];
-  const max = sets.length - 1;
-  const lens: number[] = [];
-  for (let i = sets.length; i--;) lens[i] = sets[i].length;
-  function* dive(d: number): any {
-    const a = sets[d]; const
-      len = lens[d];
-    if (d === max) {
-      for (let i = 0; i < len; ++i) {
-        p[d] = a[i];
-        yield [...p];
-      }
-    } else {
-      for (let i = 0; i < len; ++i) {
-        p[d] = a[i];
-        yield* dive(d + 1);
-      }
+function scoreTimetable(timetable: LinkedList<EventCompact>[]) {
+  let score = 0;
+
+  for (const dayList of timetable) {
+    if (dayList.isEmpty()) continue;
+
+    const { start } = dayList.begin().value;
+    let { end } = dayList.begin().value;
+
+    for (const event of dayList) {
+      end = event.value.end;
     }
-    p.pop();
-  }
-  yield* dive(0);
-}
 
-function sortEvents(a: EventCompact, b: EventCompact): number {
-  if (a.week !== b.week) {
-    return +a.week - +b.week;
-  }
-  if (a.day !== b.day) {
-    return a.day - b.day;
-  }
-  if (a.start !== b.start) {
-    return a.start - b.start;
-  }
-  if (a.end !== b.end) {
-    return a.end - b.end;
-  }
-  return 0;
-}
-
-function hasCollision(flatEvents: Array<EventCompact>): boolean {
-  if (flatEvents.length <= 1) return false;
-
-  for (let i = 1; i < flatEvents.length; i++) {
-    if (
-      flatEvents[i].week === flatEvents[i - 1].week
-      && flatEvents[i].day === flatEvents[i - 1].day
-      && flatEvents[i].start < flatEvents[i - 1].end
-    ) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-function scoreCombination(flatEvents: Array<EventCompact>): number {
-  if (flatEvents.length === 0) return 0;
-  if (flatEvents.length === 1) return flatEvents[0].end - flatEvents[0].start;
-
-  let score = flatEvents[0].end - flatEvents[0].start;
-
-  let { week, day, start } = flatEvents[0];
-  let last = flatEvents[0];
-  for (const event of flatEvents) {
-    if (week !== event.week || day !== event.day) {
-      score += last.end - start;
-      week = event.week;
-      day = event.day;
-      start = event.start;
-      last = event;
-    } else {
-      last = event;
-    }
-  }
-
-  if (week === flatEvents[0].week || day === flatEvents[0].day) {
-    score += last.end - start;
+    score += end - start;
   }
 
   return score;
+}
+
+function timeTableAddParallel(
+  timetable: LinkedList<EventCompact>[],
+  parallel: ParallelCompact,
+  addedNodes: Array<LinkedListNode<EventCompact>[]>,
+): boolean {
+  for (const eventNew of parallel.timetable) {
+    const dayIdx = (eventNew.day - 1) + (eventNew.week ? 5 : 0);
+    const singleDay = timetable[dayIdx];
+
+    if (singleDay.isEmpty()) {
+      addedNodes[dayIdx].push(singleDay.insertAfter(eventNew, singleDay.begin()));
+      continue;
+    }
+
+    let success = false;
+    for (const lle of singleDay) {
+      if (lle.value.start >= eventNew.end) {
+        if (lle.pre === singleDay.end() || (lle.pre !== singleDay.end() && lle.pre.value.end <= eventNew.start)) {
+          addedNodes[dayIdx].push(singleDay.insertBefore(eventNew, lle));
+          success = true;
+          break;
+        }
+      } else if (lle.value.end <= eventNew.start) {
+        if (lle.next === singleDay.end() || (lle.next !== singleDay.end() && lle.next.value.start >= eventNew.end)) {
+          addedNodes[dayIdx].push(singleDay.insertAfter(eventNew, lle));
+          success = true;
+          break;
+        }
+      }
+    }
+
+    // Event added
+    if (success) continue;
+
+    // Collision detected, clean-up and return false
+    for (let i = 0; i < addedNodes.length; i++) {
+      for (const node of addedNodes[i]) {
+        timetable[i].remove(node);
+      }
+    }
+    return false;
+  }
+
+  // All events added successfully
+  return true;
+}
+
+type Best = {
+  score: number,
+  parallels: Array<Array<ParallelCompact>>
+};
+
+function experimental(
+  parallelsCompact: Array<ParallelCompact[]>,
+  parallelsSelected: Array<ParallelCompact>,
+  timetable: LinkedList<EventCompact>[],
+  best: Best,
+  progress: ProgressMeter,
+  depth: number,
+) {
+  const addedNodes: Array<LinkedListNode<EventCompact>[]> = [
+    [], [], [], [], [],
+    [], [], [], [], [],
+  ];
+
+  for (const parallel of parallelsCompact[depth]) {
+    parallelsSelected[depth] = parallel;
+
+    // Add parallel to the timetable, false on collision
+    if (!timeTableAddParallel(timetable, parallel, addedNodes)) {
+      let saved = 1;
+      for (let i = depth + 1; i < parallelsCompact.length; i++) {
+        saved *= parallelsCompact[i].length;
+      }
+      progress.increment(saved);
+
+      continue;
+    }
+
+    // Current score of the current timetable
+    const score = scoreTimetable(timetable);
+
+    // Is this the last level?
+    if (depth === parallelsCompact.length - 1) {
+      // Yes, update progress and best results
+      progress.increment(1);
+
+      if (score < best.score) {
+        best.score = score;
+        best.parallels.length = 0;
+      }
+
+      if (score === best.score) {
+        best.parallels.push(parallelsSelected.slice());
+      }
+    } else if (score <= best.score) {
+      // We need to go deeper, but is it worth it?
+      // Yes, this path still has a chance to improve
+      experimental(parallelsCompact, parallelsSelected, timetable, best, progress, depth + 1);
+    } else {
+      // Not worth it, wrong way, let's skip this path and update the progress accordingly
+      let saved = 1;
+      for (let i = depth + 1; i < parallelsCompact.length; i++) {
+        saved *= parallelsCompact[i].length;
+      }
+      progress.increment(saved);
+    }
+
+    // Cleanup events from the current parallel in the timetable
+    for (const added of addedNodes) added.length = 0;
+  }
 }
 
 export default function processData(
@@ -90,57 +140,35 @@ export default function processData(
   parallelsCompact: Array<ParallelCompact[]>,
   total: number,
 ) {
-  // TODO: Some strange stuff is happening - getting the same number of total when de-selecting ParallelType, not getting all ParallelTypes for each course, ...
-
-  let done = 0;
-
   // Send initial progress report
   sendMessage({
     type: MessageResultTypes.STATUS,
     total,
-    done,
+    done: 0,
   });
 
-  let bestScore = Number.MAX_VALUE;
-  const best: ParallelCompact[][] = [];
+  const best: Best = {
+    score: Number.MAX_VALUE,
+    parallels: [],
+  };
 
-  const iterator = lazyProduct(parallelsCompact.map((parallels) => parallels.map((_, i) => i)));
-  const combination = Array<ParallelCompact>(parallelsCompact.length);
+  const progress = new ProgressMeter(
+    10_000,
+    (n: number) => sendMessage({
+      type: MessageResultTypes.STATUS,
+      total,
+      done: n,
+    }),
+  );
 
-  for (const combinationIndices of iterator) {
-    if (done % 10_000 === 10_000 - 1) {
-      sendMessage({
-        type: MessageResultTypes.STATUS,
-        total,
-        done,
-      });
-    }
-
-    for (let i = 0; i < parallelsCompact.length; i++) {
-      combination[i] = parallelsCompact[i][combinationIndices[i]];
-    }
-
-    const flatEvents = new Array<EventCompact>()
-      .concat(
-        ...combination
-          .filter((parallel) => parallel)
-          .map((parallel) => parallel.timetable),
-      )
-      .sort(sortEvents);
-
-    if (!hasCollision(flatEvents)) {
-      const score = scoreCombination(flatEvents);
-      if (score < bestScore) {
-        bestScore = score;
-        best.length = 0;
-        best.push([...combination]);
-      } else if (score === bestScore) {
-        best.push([...combination]);
-      }
-    }
-
-    done++;
-  }
+  experimental(
+    parallelsCompact,
+    [],
+    Array.from({ length: 10 }, () => new LinkedList<EventCompact>()),
+    best,
+    progress,
+    0,
+  );
 
   // Send final progress report
   sendMessage({

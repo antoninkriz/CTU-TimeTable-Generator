@@ -54,9 +54,6 @@ function useDataWorker(): [MessageResult, (params: MessageData) => void] {
   useEffect(() => {
     workerRef.current = new Worker(new URL('./_worker/worker.ts', import.meta.url));
     workerRef.current.onmessage = (event: MessageEvent<MessageResult>) => {
-      if (event.data.type === MessageResultTypes.RESULT) {
-        console.log(event.data);
-      }
       setResult(event.data);
     };
     return () => {

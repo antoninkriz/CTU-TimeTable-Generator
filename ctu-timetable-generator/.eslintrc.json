@@ -16,6 +16,9 @@
   "rules": {
     "@next/next/no-img-element": "off",
     "@typescript-eslint/no-loss-of-precision": "off",
+    "class-methods-use-this": "off",
+    "import/prefer-default-export": "off",
+    "max-classes-per-file": "off",
     "max-len": [
       "error",
       160,
@@ -28,7 +31,7 @@
         "ignoreTemplateLiterals": true
       }
     ],
-    "import/prefer-default-export": "off",
+    "no-continue": "off",
     "no-nested-ternary": "off",
     "no-bitwise": "off",
     "no-plusplus": "off",

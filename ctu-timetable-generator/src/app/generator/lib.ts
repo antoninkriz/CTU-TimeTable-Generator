@@ -42,7 +42,7 @@ export const useData = (
       setTimeout(() => {
         resolve(data);
         if (cbSuccess.current) cbSuccess.current();
-      }, 500);
+      }, 100);
     });
   } catch (err) {
     if (cbError.current) cbError.current();
@@ -51,37 +51,45 @@ export const useData = (
 });
 
 export function useToastDataWrapper() {
+  const TOAST_ID = 'toast-loading-data';
   const dataResolved = useRef<(() => void) | undefined>(undefined);
   const dataError = useRef<(() => void) | undefined>(undefined);
 
-  const toast = useToast({ position: 'bottom' });
+  const toast = useToast({ position: 'bottom', id: TOAST_ID });
   useEffect(() => {
-    toast.promise(new Promise((resolve, reject) => {
-      // This is a nice and funny thread race that should (probably) evaluate correctly, so the resolve/reject callbacks
-      // should be assigned just in time when dataResolved/dataError callbacks are used.
-      // Actually, they should be assigned even before the call to useData, so nothing should break, but I can't promise
-      // anything. I hate this as much as you do. :)
-      dataResolved.current = () => resolve(true);
-      dataError.current = () => reject();
-    }), {
-      loading: {
-        title: 'Načítání dat',
-        description: 'To může chviklu trvat',
-        duration: null,
-      },
-      success: {
-        title: 'Vše je ready',
-        description: 'Můžeš se pustit do sestavování rozvrhu',
-      },
-      error: {
-        title: 'ERROR',
-        description: 'Nastala chyba při načítání dat. 😢',
-      },
-    });
+    if (!toast.isActive(TOAST_ID)) {
+      toast.promise(new Promise((resolve, reject) => {
+        // This is a nice and funny thread race that should (probably) evaluate correctly, so the resolve/reject callbacks
+        // should be assigned just in time when dataResolved/dataError callbacks are used.
+        // Actually, they should be assigned even before the call to useData, so nothing should break, but I can't promise
+        // anything. I hate this as much as you do. :)
+        dataResolved.current = () => resolve(true);
+        dataError.current = () => reject();
+      }), {
+        loading: {
+          title: 'Načítání dat',
+          description: 'To může chviklu trvat',
+          duration: null,
+        },
+        success: {
+          title: 'Vše je ready',
+          description: 'Můžeš se pustit do sestavování rozvrhu',
+        },
+        error: {
+          title: 'ERROR',
+          description: 'Nastala chyba při načítání dat. 😢',
+        },
+      });
+    }
     // I don't want to update this thing on every re-render, that would create duplicate toast and I ain't risking using
     // useRef(useToast(...)) together.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return useData(dataResolved, dataError);
+}
+
+export function arrayDifference<T>(a1: Array<T>, a2: Array<T>) {
+  const a2Set = new Set(a2);
+  return a1.filter((x) => !a2Set.has(x));
 }

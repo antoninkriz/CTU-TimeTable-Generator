@@ -1,7 +1,7 @@
 'use client';
 
 import {
-  Dispatch, SetStateAction, useContext, useEffect, useRef, useState,
+  useContext, useEffect, useRef, useState,
 } from 'react';
 import {
   Alert,
@@ -36,7 +36,7 @@ import {
   useColorModeValue,
 } from '@chakra-ui/react';
 import type { SWRResponse } from 'swr';
-import { useToastDataWrapper } from '@src/app/generator/lib';
+import { arrayDifference, useToastDataWrapper } from '@src/app/generator/lib';
 import type {
   Course, CoursePreferences, Data, MessageData, MessageResult,
 } from '@src/types';
@@ -46,14 +46,19 @@ import { DrawerContext } from '@src/lib';
 import { AsyncSelect, Select } from 'chakra-react-select';
 import { Link } from '@chakra-ui/next-js';
 
-function useDataWorker(): [MessageResult | undefined, (params: MessageData) => void] {
+function useDataWorker(): [MessageResult, (params: MessageData) => void] {
   const workerRef = useRef<Worker>();
-  const [result, setResult] = useState<MessageResult | undefined>(undefined);
+  const [result, setResult] = useState<MessageResult>({ type: MessageResultTypes.PRE_INIT });
 
   // Manage response from the worker
   useEffect(() => {
     workerRef.current = new Worker(new URL('./_worker/worker.ts', import.meta.url));
-    workerRef.current.onmessage = (event: MessageEvent<MessageResult>) => setResult(event.data);
+    workerRef.current.onmessage = (event: MessageEvent<MessageResult>) => {
+      if (event.data.type === MessageResultTypes.RESULT) {
+        console.log(event.data);
+      }
+      setResult(event.data);
+    };
     return () => {
       workerRef.current?.terminate();
     };
@@ -79,10 +84,11 @@ function Error({ error }: { error: any }) {
 type FormComponentProps = {
   dataResponse: SWRResponse<Data>,
   semester: string | undefined,
-  setSemester: Dispatch<SetStateAction<string | undefined>>,
+  setSemester: (semester: string | undefined) => void,
   courses: Array<Course>,
-  setCourses: Dispatch<SetStateAction<Array<Course>>>,
-  preferencesUpdate: (courseId: string, parallelType: ParallelType, value: boolean) => void,
+  setCourses: (courses: Array<Course>) => void,
+  preferences: { [courseId: string]: { [parallelType in ParallelType]: boolean } }
+  setPreferences: (courseId: string, parallelType: ParallelType, value: boolean) => void,
   computeCallback: () => void,
 };
 
@@ -92,7 +98,8 @@ function FormComponent({
   setSemester,
   courses,
   setCourses,
-  preferencesUpdate,
+  preferences,
+  setPreferences,
   computeCallback,
 } : FormComponentProps) {
   const { data, error } = dataResponse;
@@ -171,9 +178,27 @@ function FormComponent({
               {courses.map((course) => (
                 <Tr key={course.code}>
                   <Th fontFamily="mono">{course.code}</Th>
-                  <Th><Checkbox defaultChecked onChange={(e) => preferencesUpdate(course.code, ParallelType.Lecture, e.target.checked)} /></Th>
-                  <Th><Checkbox defaultChecked onChange={(e) => preferencesUpdate(course.code, ParallelType.Tutorial, e.target.checked)} /></Th>
-                  <Th><Checkbox defaultChecked onChange={(e) => preferencesUpdate(course.code, ParallelType.Lab, e.target.checked)} /></Th>
+                  <Th>
+                    <Checkbox
+                      defaultChecked
+                      checked={preferences[course.code]?.[ParallelType.Lecture]}
+                      onChange={(e) => setPreferences(course.code, ParallelType.Lecture, e.target.checked)}
+                    />
+                  </Th>
+                  <Th>
+                    <Checkbox
+                      defaultChecked
+                      checked={preferences[course.code]?.[ParallelType.Tutorial]}
+                      onChange={(e) => setPreferences(course.code, ParallelType.Tutorial, e.target.checked)}
+                    />
+                  </Th>
+                  <Th>
+                    <Checkbox
+                      defaultChecked
+                      checked={preferences[course.code]?.[ParallelType.Lab]}
+                      onChange={(e) => setPreferences(course.code, ParallelType.Lab, e.target.checked)}
+                    />
+                  </Th>
                 </Tr>
               ))}
             </Tbody>
@@ -202,7 +227,8 @@ function MenuSide({
   setSemester,
   courses,
   setCourses,
-  preferencesUpdate,
+  preferences,
+  setPreferences,
   computeCallback,
 }: FormComponentProps) {
   return (
@@ -214,7 +240,8 @@ function MenuSide({
           setSemester={setSemester}
           courses={courses}
           setCourses={setCourses}
-          preferencesUpdate={preferencesUpdate}
+          preferences={preferences}
+          setPreferences={setPreferences}
           computeCallback={computeCallback}
         />
       </Stack>
@@ -228,7 +255,8 @@ function MenuDrawer({
   setSemester,
   courses,
   setCourses,
-  preferencesUpdate,
+  preferences,
+  setPreferences,
   computeCallback,
 }: FormComponentProps) {
   const { isOpen, onClose } = useContext(DrawerContext);
@@ -248,7 +276,8 @@ function MenuDrawer({
                 setSemester={setSemester}
                 courses={courses}
                 setCourses={setCourses}
-                preferencesUpdate={preferencesUpdate}
+                preferences={preferences}
+                setPreferences={setPreferences}
                 computeCallback={computeCallback}
               />
             </Stack>
@@ -267,10 +296,29 @@ export default function Generator() {
   const [semester, setSemester] = useState<string | undefined>(undefined);
   const [courses, setCourses] = useState<Array<Course>>([]);
   const [preferences, setPreferences] = useState<CoursePreferences>({});
+  const setCoursesUpdatePreferences = (coursesNew: Array<Course>) => {
+    setPreferences((p) => {
+      if (coursesNew.length === 0) return {};
+      const diffAdded = arrayDifference(coursesNew, courses);
+      const diffRemoved = arrayDifference(courses, coursesNew);
+
+      const res = diffAdded.reduce((obj, course) => {
+        obj[course.code] = { [ParallelType.Lecture]: true, [ParallelType.Tutorial]: true, [ParallelType.Lab]: true };
+        return obj;
+      }, { ...p });
+
+      for (const courseRemoved of diffRemoved) {
+        delete res[courseRemoved.code];
+      }
+
+      return res;
+    });
+    setCourses(coursesNew);
+  };
   const preferencesUpdate = (courseId: string, parallelType: ParallelType, value: boolean) => setPreferences((p) => ({
     ...p,
     [courseId]: {
-      ...(courseId in p ? p[courseId] : { [ParallelType.Lecture]: true, [ParallelType.Tutorial]: true, [ParallelType.Lab]: true }),
+      ...p[courseId],
       [parallelType]: value,
     },
   }));
@@ -285,9 +333,11 @@ export default function Generator() {
     }
   };
 
-  if (result?.type === MessageResultTypes.RESULT) setIsComputing(false);
+  if (isComputing && result.type === MessageResultTypes.RESULT) setIsComputing(false);
 
-  const progress = isComputing && result?.type === MessageResultTypes.STATUS ? result.done / result.total : 0;
+  const progress = result.type === MessageResultTypes.STATUS || result.type === MessageResultTypes.RESULT
+    ? (result.done / result.total) * 100
+    : 0;
 
   return (
     <>
@@ -297,8 +347,9 @@ export default function Generator() {
           semester={semester}
           setSemester={setSemester}
           courses={courses}
-          setCourses={setCourses}
-          preferencesUpdate={preferencesUpdate}
+          setCourses={setCoursesUpdatePreferences}
+          preferences={preferences}
+          setPreferences={preferencesUpdate}
           computeCallback={computeCallback}
         />
         <Box flex={1} width="full">
@@ -307,9 +358,19 @@ export default function Generator() {
               <Stack>
                 <HStack justifyContent="space-between" px={4}>
                   <Text>Probíhá výpočet...</Text>
-                  <Text fontFamily="mono">{progress.toFixed(2)} %</Text>
+                  <Text fontFamily="mono">{progress.toFixed(1)} %</Text>
                 </HStack>
-                <Progress value={80} rounded="sm" />
+                <Tooltip
+                  fontFamily="mono"
+                  label={
+                    result.type === MessageResultTypes.STATUS || result.type === MessageResultTypes.RESULT
+                      ? `${result.done} / ${result.total}`
+                      : undefined
+                  }
+                  hasArrow
+                >
+                  <Progress value={progress} rounded="sm" />
+                </Tooltip>
               </Stack>
             </Container>
           </Center>
@@ -320,8 +381,9 @@ export default function Generator() {
         semester={semester}
         setSemester={setSemester}
         courses={courses}
-        setCourses={setCourses}
-        preferencesUpdate={preferencesUpdate}
+        setCourses={setCoursesUpdatePreferences}
+        preferences={preferences}
+        setPreferences={preferencesUpdate}
         computeCallback={computeCallback}
       />
     </>

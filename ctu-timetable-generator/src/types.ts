@@ -1,10 +1,21 @@
 // Data
+export enum WeekType {
+  Even = 'S',
+  Odd = 'L',
+}
+
 export type Event = {
   day: number
-  week: 'S' | 'L' | null
+  week: WeekType | null
   start: [number, number]
   end: [number, number]
   room: string | null
+};
+
+export type EventCompact = Omit<Event, 'week' | 'room' | 'start' | 'end'> & {
+  week: boolean,
+  start: number,
+  end: number,
 };
 
 export enum ParallelType {
@@ -20,10 +31,20 @@ export type Parallel = {
   timetable: Array<Event>
 };
 
+export type ParallelCompact = Omit<Parallel, 'capacity' | 'timetable'> & {
+  timetable: Array<EventCompact>
+};
+
 export type Course = {
   code: string
   name: string
   parallels: Array<Parallel>
+};
+
+export type CourseCompact = Omit<Course, 'name' | 'parallels'> & {
+  parallels: {
+    [parallelType in ParallelType]: Array<ParallelCompact>
+  }
 };
 
 export type Semester = Array<Course>;
@@ -57,12 +78,15 @@ export type MessageData = {
 };
 
 export enum MessageResultTypes {
+  PRE_INIT = 'PRE_INIT',
   INIT = 'INIT',
   STATUS = 'STATUS',
   RESULT = 'RESULT',
 }
 
 export type MessageResult = {
+  type: MessageResultTypes.PRE_INIT
+} | {
   type: MessageResultTypes.INIT
 } | {
   type: MessageResultTypes.STATUS
@@ -70,5 +94,7 @@ export type MessageResult = {
   done: number
 } | {
   type: MessageResultTypes.RESULT
-  data: undefined
+  data: Array<{ [courseId: string]: { [parallelType in ParallelType]: Parallel | undefined } }>
+  total: number
+  done: number
 };

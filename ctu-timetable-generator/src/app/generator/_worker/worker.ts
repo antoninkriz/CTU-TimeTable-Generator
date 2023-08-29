@@ -36,21 +36,21 @@ addEventListener('message', async (event: MessageEvent<MessageData>) => {
             // Push both S and L version when the week is null
             arr.push({
               day: timeTableEvent.day,
-              start: timeTableEvent.start[0] * 100 + timeTableEvent.start[1],
-              end: timeTableEvent.end[0] * 100 + timeTableEvent.end[1],
+              start: timeTableEvent.start[0] * 60 + timeTableEvent.start[1],
+              end: timeTableEvent.end[0] * 60 + timeTableEvent.end[1],
               week: true,
             } as EventCompact);
             arr.push({
               day: timeTableEvent.day,
-              start: timeTableEvent.start[0] * 100 + timeTableEvent.start[1],
-              end: timeTableEvent.end[0] * 100 + timeTableEvent.end[1],
+              start: timeTableEvent.start[0] * 60 + timeTableEvent.start[1],
+              end: timeTableEvent.end[0] * 60 + timeTableEvent.end[1],
               week: false,
             } as EventCompact);
           } else {
             arr.push({
               day: timeTableEvent.day,
-              start: timeTableEvent.start[0] * 100 + timeTableEvent.start[1],
-              end: timeTableEvent.end[0] * 100 + timeTableEvent.end[1],
+              start: timeTableEvent.start[0] * 60 + timeTableEvent.start[1],
+              end: timeTableEvent.end[0] * 60 + timeTableEvent.end[1],
               week: timeTableEvent.week === WeekType.Odd,
             } as EventCompact);
           }

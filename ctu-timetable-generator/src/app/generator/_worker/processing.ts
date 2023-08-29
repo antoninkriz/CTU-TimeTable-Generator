@@ -8,6 +8,8 @@ function scoreTimetable(timetable: LinkedList<EventCompact>[]) {
 
   for (const dayList of timetable) {
     if (dayList.isEmpty()) continue;
+    // Penalty for each day, therefore fewer days taken equals better score
+    score += 24 * 60;
 
     const { start } = dayList.begin().value;
     let { end } = dayList.begin().value;
@@ -36,7 +38,6 @@ function timeTableAddParallel(
       continue;
     }
 
-    // TODO: Fix time compare type + logic
     let success = false;
     for (const lle of singleDay) {
       if (lle.value.start >= eventNew.end) {

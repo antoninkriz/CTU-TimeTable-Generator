@@ -97,6 +97,7 @@ export default function Generator() {
           preferences={preferences}
           setPreferences={preferencesUpdate}
           computeCallback={computeCallback}
+          disabled={isComputing}
         />
         <Box flex={1} width="full">
           {
@@ -115,6 +116,7 @@ export default function Generator() {
         preferences={preferences}
         setPreferences={preferencesUpdate}
         computeCallback={computeCallback}
+        disabled={isComputing}
       />
     </>
   );

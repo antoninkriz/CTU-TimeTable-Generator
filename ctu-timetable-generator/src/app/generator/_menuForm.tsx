@@ -59,6 +59,7 @@ type FormComponentProps = {
   preferences: { [courseId: string]: { [parallelType in ParallelType]: boolean } }
   setPreferences: (courseId: string, parallelType: ParallelType, value: boolean) => void,
   computeCallback: () => void,
+  disabled: boolean
 };
 
 function FormComponent({
@@ -70,6 +71,7 @@ function FormComponent({
   preferences,
   setPreferences,
   computeCallback,
+  disabled,
 } : FormComponentProps) {
   const { data, error } = dataResponse;
   const isLoaded = !dataResponse.isLoading && !dataResponse.isValidating;
@@ -106,13 +108,14 @@ function FormComponent({
           value={valueSemester}
           options={optionsSemesters}
           placeholder="Zvol seemstr"
+          isDisabled={disabled}
         />
       </Skeleton>
       <Skeleton h={!isLoaded ? 12 : undefined} isLoaded={isLoaded} fontFamily="mono">
         <AsyncSelect<OptionClass<Course>, true>
           instanceId="select-courses"
           isMulti
-          isDisabled={semester === undefined}
+          isDisabled={semester === undefined || disabled}
           onChange={(x) => setCourses(x.map((course) => course.value))}
           value={valueCourses}
           loadOptions={filterCourses}
@@ -152,6 +155,7 @@ function FormComponent({
                       defaultChecked
                       checked={preferences[course.code]?.[ParallelType.Lecture]}
                       onChange={(e) => setPreferences(course.code, ParallelType.Lecture, e.target.checked)}
+                      isDisabled={disabled}
                     />
                   </Th>
                   <Th>
@@ -159,6 +163,7 @@ function FormComponent({
                       defaultChecked
                       checked={preferences[course.code]?.[ParallelType.Tutorial]}
                       onChange={(e) => setPreferences(course.code, ParallelType.Tutorial, e.target.checked)}
+                      isDisabled={disabled}
                     />
                   </Th>
                   <Th>
@@ -166,6 +171,7 @@ function FormComponent({
                       defaultChecked
                       checked={preferences[course.code]?.[ParallelType.Lab]}
                       onChange={(e) => setPreferences(course.code, ParallelType.Lab, e.target.checked)}
+                      isDisabled={disabled}
                     />
                   </Th>
                 </Tr>
@@ -179,7 +185,7 @@ function FormComponent({
         <Tooltip label={semester === undefined || courses.length === 0 ? 'Vyber si předměty' : undefined} hasArrow>
           <Button
             onClick={computeCallback}
-            isDisabled={semester === undefined || courses.length === 0}
+            isDisabled={disabled || semester === undefined || courses.length === 0}
             w="full"
           >
             Spustit výpočet
@@ -199,6 +205,7 @@ export function MenuSide({
   preferences,
   setPreferences,
   computeCallback,
+  disabled,
 }: FormComponentProps) {
   return (
     <Flex display={{ base: 'none', xl: 'block' }} w="lg" shadow="md">
@@ -212,6 +219,7 @@ export function MenuSide({
           preferences={preferences}
           setPreferences={setPreferences}
           computeCallback={computeCallback}
+          disabled={disabled}
         />
       </Stack>
     </Flex>
@@ -227,6 +235,7 @@ export function MenuDrawer({
   preferences,
   setPreferences,
   computeCallback,
+  disabled,
 }: FormComponentProps) {
   const { isOpen, onClose } = useContext(DrawerContext);
 
@@ -248,6 +257,7 @@ export function MenuDrawer({
                 preferences={preferences}
                 setPreferences={setPreferences}
                 computeCallback={computeCallback}
+                disabled={disabled}
               />
             </Stack>
           </Flex>

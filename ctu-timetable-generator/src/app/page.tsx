@@ -39,7 +39,7 @@ export default function Index() {
             <Text>Najdi svůj ideální rozvrh hodin bez otravného hledání vhodných paralelek tvých předmětů!</Text>
           </Stack>
           <Stack as={Box} textAlign="center" mt={4}>
-            <Text>Studenty již od pradávna jistě trápí stejná otázka:</Text>
+            <Text>Studenty, a tedy nejspíš i Tebe, vždy trápila stejná otázka:</Text>
             <Text color={yellow} fontWeight="600" as="span">
               „Jak nechodit do školy a zároveň si odnést titul?“
             </Text>

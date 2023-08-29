@@ -18,6 +18,8 @@
 
 Harder, better, faster, stronger
 
+This project was created as a tribute to the memory of [CTU-TimeTableGenerator](https://github.com/antoninkriz/CTU-TimeTableGenerator) and [CTU-TimeTableGenerator-new](https://github.com/antoninkriz/CTU-TimeTableGenerator-new) - older variants written in C++, Python, Bash and some React. Rest in peace.
+
 
 ## Usage
 

@@ -39,7 +39,7 @@ function Intro() {
           <VStack justifyContent="space-between" px={4} textAlign="center">
             <Heading>🗓️<br />Vyber si své předměty</Heading>
             <Text>
-              Koukni do menu, vyber si semestr a předměty, které tě zajímají a nastav si, které jejich části tě zajímají.
+              Koukni do menu a vyber si semestr a předměty a nastav si, které části předmětů tě zajímají.
             </Text>
           </VStack>
         </Stack>

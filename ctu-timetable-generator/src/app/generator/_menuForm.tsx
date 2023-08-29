@@ -245,8 +245,8 @@ export function MenuDrawer({
       <DrawerContent>
         <DrawerCloseButton />
         <DrawerHeader />
-        <DrawerBody>
-          <Flex direction="column">
+        <DrawerBody p={6}>
+          <Flex direction="column" flex={1} height="full">
             <Stack w="full" h="full" flex={1} spacing={6}>
               <FormComponent
                 dataResponse={dataResponse}

@@ -19,34 +19,35 @@ import {
 } from 'react-icons/io5';
 import { GITHUB_URL } from '@src/consts';
 import { DrawerContext } from '@src/lib';
+import { usePathname } from 'next/navigation';
+import paths from '@src/paths';
 
 export default function Nav() {
   const { colorMode, toggleColorMode } = useColorMode();
   const { onToggle } = useContext(DrawerContext);
+  const pathname = usePathname();
 
   return (
-    <>
-      <Box bg={useColorModeValue('gray.100', 'gray.900')} px={4}>
-        <Flex h={16} alignItems="center" justifyContent="space-between">
-          <Stack direction="row" spacing={3}>
-            <Button onClick={onToggle} display={{ xl: 'none' }}><Icon as={IoMenu} boxSize={6} /></Button>
-            <Link href="/" as={NextLink} fontFamily="mono"><Button fontSize="xl" as="span">[TTG]</Button></Link>
-          </Stack>
+    <Box bg={useColorModeValue('gray.100', 'gray.900')} px={4}>
+      <Flex h={16} alignItems="center" justifyContent="space-between">
+        <Stack direction="row" spacing={3}>
+          <Button onClick={onToggle} display={pathname === paths.GENERATOR ? { xl: 'none' } : 'none'}><Icon as={IoMenu} boxSize={6} /></Button>
+          <Link href={paths.HOME} as={NextLink} fontFamily="mono"><Button fontSize="xl" as="span">[TTG]</Button></Link>
+        </Stack>
 
-          <Flex alignItems="center">
-            <Stack direction="row" spacing={3}>
-              <Button onClick={toggleColorMode}>
-                {colorMode === 'light' ? <Icon as={IoMoonSharp} boxSize={6} /> : <Icon as={IoSunnySharp} boxSize={6} />}
+        <Flex alignItems="center">
+          <Stack direction="row" spacing={3}>
+            <Button onClick={toggleColorMode}>
+              {colorMode === 'light' ? <Icon as={IoMoonSharp} boxSize={6} /> : <Icon as={IoSunnySharp} boxSize={6} />}
+            </Button>
+            <Link href={GITHUB_URL} target="_blank">
+              <Button>
+                <Icon as={IoLogoGithub} boxSize={6} />
               </Button>
-              <Link href={GITHUB_URL} target="_blank">
-                <Button>
-                  <Icon as={IoLogoGithub} boxSize={6} />
-                </Button>
-              </Link>
-            </Stack>
-          </Flex>
+            </Link>
+          </Stack>
         </Flex>
-      </Box>
-    </>
+      </Flex>
+    </Box>
   );
 }

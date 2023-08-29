@@ -18,6 +18,7 @@ import {
   IoHeart,
 } from 'react-icons/io5';
 import { GITHUB_URL, PERSONAL_URL } from '@src/consts';
+import paths from '@src/paths';
 
 export default function Index() {
   const yellow = useColorModeValue('yellow.500', 'yellow.400');
@@ -45,19 +46,23 @@ export default function Index() {
           </Stack>
           <Stack as={Box} textAlign="justify" py={8} pt={0}>
             <Text>
-              Ať už tě odpověď na tuto otázku zajímá proto, že chceš se školou stíhat i práci a své koníčky, nebo jen proto, že
-              jsi <Text as="i">rok od roku hloupější a línější</Text>, tak jsi zde správně!
+              Ať už tě odpověď na tuto otázku zajímá proto, že chceš se školou stíhat i práci a své koníčky, nebo jen proto, že jsi{' '}
+              <Text as="i">rok od roku hloupější a línější</Text>, tak jsi zde správně!
             </Text>
             <Text>
-              Tahle appka Ti tuhle otázku nejspíš sice nezodpoví, ale pomůže Ti najít takové složení hodin, respektive přednášek, cvičení a laboratoří,
-              které si zvolíš, abys strávil/a ve škole času co nejméně.
+              Tahle appka Ti tuhle otázku nejspíš sice nezodpoví, ale pomůže Ti najít takové složení hodin, respektive přednášek, cvičení a laboratoří, které si
+              zvolíš, abys strávil/a ve škole času co nejméně.
             </Text>
             <Heading textAlign="center" fontWeight={600} fontSize={{ base: 'md', sm: 'xl', md: '2xl' }} lineHeight="150%" color={yellow}>
               Jak?
             </Heading>
             <Text>
-              Stačí si vybrat ze seznamu semestr a předměty, které Tě zajímají, zvolit, zda chceš chodit na jen na cvičení nebo i na přednášky. Během chvilky
-              na tebe vyskočí všechny <Text fontWeight="600" as="i">bezkolizní</Text> rozvrhy, které splňují Tvé zadání.
+              Stačí si vybrat ze seznamu semestr a předměty, které Tě zajímají, zvolit, zda chceš chodit na jen na cvičení nebo i na přednášky. Během chvilky na
+              tebe vyskočí všechny{' '}
+              <Text fontWeight="600" as="i">
+                bezkolizní
+              </Text>{' '}
+              rozvrhy, které splňují Tvé zadání.
             </Text>
             <Text>
               Neboj, nemusíš se nijak přihlašovat do{' '}
@@ -70,13 +75,20 @@ export default function Index() {
             <Text>
               V mezičase se mi neboj kliknout na srdíčko na{' '}
               <Text as="span" whiteSpace="nowrap">
-                <Link href={GITHUB_URL} color={blueLink} fontWeight="600" target="_blank">GitHubu</Link> <Icon as={IoHeart} boxSize={4} color="red.500" />
-              </Text>, nebo koukni na <Link href={PERSONAL_URL} color={blueLink} fontWeight="600" target="_blank">můj web</Link>. Moc tam toho asi nenajdeš, ale
-              tenhle odkaz mi určitě zlepší SEO.
+                <Link href={GITHUB_URL} color={blueLink} fontWeight="600" target="_blank">
+                  GitHubu
+                </Link>{' '}
+                <Icon as={IoHeart} boxSize={4} color="red.500" />
+              </Text>
+              , nebo koukni na{' '}
+              <Link href={PERSONAL_URL} color={blueLink} fontWeight="600" target="_blank">
+                můj web
+              </Link>
+              . Moc tam toho asi nenajdeš, ale tenhle odkaz mi určitě zlepší SEO.
             </Text>
           </Stack>
           <Stack direction="column" spacing={3} align="center" alignSelf="center" position="relative">
-            <Link href="/generator" as={NextLink}>
+            <Link href={paths.GENERATOR} as={NextLink}>
               <Button px={8} py={6} fontFamily="mono" as="span">
                 SPUSTIT APPKU
               </Button>

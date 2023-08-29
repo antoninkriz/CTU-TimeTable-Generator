@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Box, Flex } from '@chakra-ui/react';
+import {
+  Box, Center, Container, Flex, Heading, VStack, Stack, Text,
+} from '@chakra-ui/react';
 import { arrayDifference, useToastDataWrapper } from '@src/app/generator/lib';
 import type {
   Course, CoursePreferences, MessageData, MessageResult,
@@ -28,6 +30,24 @@ function useDataWorker(): [MessageResult, (params: MessageData) => void] {
 
   return [result, (params: MessageData) => workerRef.current?.postMessage(params)];
 }
+
+function Intro() {
+  return (
+    <Center h="full" w="full">
+      <Container>
+        <Stack>
+          <VStack justifyContent="space-between" px={4} textAlign="center">
+            <Heading>🗓️<br />Vyber si své předměty</Heading>
+            <Text>
+              Koukni do menu, vyber si semestr a předměty, které tě zajímají a nastav si, které jejich části tě zajímají.
+            </Text>
+          </VStack>
+        </Stack>
+      </Container>
+    </Center>
+  );
+}
+
 export default function Generator() {
   const dataResponse = useToastDataWrapper();
 
@@ -85,6 +105,21 @@ export default function Generator() {
 
   if (isComputing && result.type === MessageResultTypes.RESULT) setIsComputing(false);
 
+  let content;
+  switch (result.type) {
+    case MessageResultTypes.INIT:
+    case MessageResultTypes.STATUS:
+      content = <ProgressBar result={result} />;
+      break;
+    case MessageResultTypes.RESULT:
+      content = <TimeTable result={result} variant={variant} nextVariant={nextVariant} prevVariant={prevVariant} />;
+      break;
+    case MessageResultTypes.PRE_INIT:
+    default:
+      content = <Intro />;
+      break;
+  }
+
   return (
     <>
       <Flex grow={1}>
@@ -100,11 +135,7 @@ export default function Generator() {
           disabled={isComputing}
         />
         <Box flex={1} width="full">
-          {
-            result.type !== MessageResultTypes.RESULT
-              ? <ProgressBar result={result} />
-              : <TimeTable result={result} variant={variant} nextVariant={nextVariant} prevVariant={prevVariant} />
-          }
+          {content}
         </Box>
       </Flex>
       <MenuDrawer

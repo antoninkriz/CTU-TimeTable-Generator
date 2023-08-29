@@ -19,7 +19,22 @@
 Harder, better, faster, stronger
 
 
+## Usage
+
+Just open [the website](https://antoninkriz.github.io/CTU-TimeTable-Generator/) - no more downloading, installing, compiling, generating auth tokens and crying!
+
+
+## Data
+
+You don't need to login or generate any auth tokens. The data are fetched every 2 hours or so (check [`fetch-data.yml`](https://github.com/antoninkriz/CTU-TimeTable-Generator/blob/main/.github/workflows/fetch-data.yml)) from the KOS API. If you have a better strategy, which doesn't include frying the KOS API every minute, please let me know. ❤
+
+
 ## Components
 
 - `kos-loader` - Loads data from the KOS API
 - `ctu-timetable-generator` - User-facing app
+
+
+## Development
+
+See `README.md` in each component's folder.

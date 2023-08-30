@@ -113,7 +113,7 @@ function FormComponent({
           onChange={(x) => setSemester(x !== null ? x.value : undefined)}
           value={valueSemester}
           options={optionsSemesters}
-          placeholder="Zvol semstr"
+          placeholder="Zvol semestr"
           isDisabled={disabled}
         />
       </Skeleton>

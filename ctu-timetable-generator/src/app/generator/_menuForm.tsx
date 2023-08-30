@@ -1,3 +1,4 @@
+import { useContext } from 'react';
 import {
   Alert,
   AlertIcon,
@@ -10,7 +11,6 @@ import {
   DrawerBody,
   DrawerCloseButton,
   DrawerContent,
-  DrawerHeader,
   DrawerOverlay,
   Flex,
   Skeleton,
@@ -18,6 +18,7 @@ import {
   Table,
   TableContainer,
   Tbody,
+  Td,
   Text,
   Th,
   Thead,
@@ -26,14 +27,13 @@ import {
   useColorModeValue,
 } from '@chakra-ui/react';
 import { Link } from '@chakra-ui/next-js';
-import { GITHUB_URL } from '@src/consts';
+import { AsyncSelect, Select } from 'chakra-react-select';
 import type { SWRResponse } from 'swr';
 import type {
   Course, Data,
 } from '@src/types';
 import { OptionClass, ParallelType } from '@src/types';
-import { AsyncSelect, Select } from 'chakra-react-select';
-import { useContext } from 'react';
+import { GITHUB_URL } from '@src/consts';
 import { DrawerContext } from '@src/lib';
 
 function Error({ error }: { error: any }) {
@@ -51,14 +51,14 @@ function Error({ error }: { error: any }) {
 }
 
 type FormComponentProps = {
-  dataResponse: SWRResponse<Data>,
-  semester: string | undefined,
-  setSemester: (semester: string | undefined) => void,
-  courses: Array<Course>,
-  setCourses: (courses: Array<Course>) => void,
+  dataResponse: SWRResponse<Data>
+  semester: string | undefined
+  setSemester: (semester: string | undefined) => void
+  courses: Array<Course>
+  setCourses: (courses: Array<Course>) => void
   preferences: { [courseId: string]: { [parallelType in ParallelType]: boolean } }
-  setPreferences: (courseId: string, parallelType: ParallelType, value: boolean) => void,
-  computeCallback: () => void,
+  setPreferences: (courseId: string, parallelType: ParallelType, value: boolean) => void
+  computeCallback: () => void
   disabled: boolean
 };
 
@@ -72,7 +72,8 @@ function FormComponent({
   setPreferences,
   computeCallback,
   disabled,
-} : FormComponentProps) {
+  onCloseMenu = () => {},
+} : FormComponentProps & { onCloseMenu?: () => void }) {
   const { data, error } = dataResponse;
   const isLoaded = !dataResponse.isLoading && !dataResponse.isValidating;
 
@@ -91,6 +92,11 @@ function FormComponent({
       : () => []
   );
   const optionsCourses = data && semester !== undefined ? data[semester].map((course) => new OptionClass(course, `${course.code} | ${course.name}`)) : [];
+
+  const paddingCellX = {
+    base: 2,
+    md: 4,
+  };
 
   return (
     <>
@@ -140,40 +146,46 @@ function FormComponent({
           <Table size="sm" variant="striped">
             <Thead>
               <Tr>
-                <Th>Kód</Th>
-                <Th>Přednášky</Th>
-                <Th>Cvičení</Th>
-                <Th>Laboratoře</Th>
+                <Th px={paddingCellX}>Kód</Th>
+                <Th px={paddingCellX}>Přednášky</Th>
+                <Th px={paddingCellX}>Cvičení</Th>
+                <Th px={paddingCellX}>Laboratoře</Th>
               </Tr>
             </Thead>
             <Tbody>
               {courses.map((course) => (
                 <Tr key={course.code}>
-                  <Th fontFamily="mono">{course.code}</Th>
-                  <Th>
-                    <Checkbox
-                      defaultChecked
-                      checked={preferences[course.code]?.[ParallelType.Lecture]}
-                      onChange={(e) => setPreferences(course.code, ParallelType.Lecture, e.target.checked)}
-                      isDisabled={disabled}
-                    />
-                  </Th>
-                  <Th>
+                  <Td px={paddingCellX} fontFamily="mono">{course.code}</Td>
+                  <Td px={paddingCellX}>
+                    {course.has[ParallelType.Lecture] && (
+                      <Checkbox
+                        defaultChecked
+                        checked={preferences[course.code]?.[ParallelType.Lecture]}
+                        onChange={(e) => setPreferences(course.code, ParallelType.Lecture, e.target.checked)}
+                        isDisabled={disabled}
+                      />
+                    )}
+                  </Td>
+                  <Td px={paddingCellX}>
+                    {course.has[ParallelType.Tutorial] && (
                     <Checkbox
                       defaultChecked
                       checked={preferences[course.code]?.[ParallelType.Tutorial]}
                       onChange={(e) => setPreferences(course.code, ParallelType.Tutorial, e.target.checked)}
                       isDisabled={disabled}
                     />
-                  </Th>
-                  <Th>
-                    <Checkbox
-                      defaultChecked
-                      checked={preferences[course.code]?.[ParallelType.Lab]}
-                      onChange={(e) => setPreferences(course.code, ParallelType.Lab, e.target.checked)}
-                      isDisabled={disabled}
-                    />
-                  </Th>
+                    )}
+                  </Td>
+                  <Td px={paddingCellX}>
+                    {course.has[ParallelType.Lab] && (
+                      <Checkbox
+                        defaultChecked
+                        checked={preferences[course.code]?.[ParallelType.Lab]}
+                        onChange={(e) => setPreferences(course.code, ParallelType.Lab, e.target.checked)}
+                        isDisabled={disabled}
+                      />
+                    )}
+                  </Td>
                 </Tr>
               ))}
             </Tbody>
@@ -184,8 +196,8 @@ function FormComponent({
       <Skeleton h={!isLoaded ? 10 : undefined} isLoaded={isLoaded}>
         <Tooltip label={semester === undefined || courses.length === 0 ? 'Vyber si předměty' : undefined} hasArrow>
           <Button
-            onClick={computeCallback}
-            isDisabled={disabled || semester === undefined || courses.length === 0}
+            onClick={() => { onCloseMenu(); computeCallback(); }}
+            isDisabled={disabled || semester === undefined || courses.length === 0 || Object.values(preferences).every((x) => !x.P && !x.C && !x.L)}
             w="full"
           >
             Spustit výpočet
@@ -244,8 +256,7 @@ export function MenuDrawer({
       <DrawerOverlay />
       <DrawerContent>
         <DrawerCloseButton />
-        <DrawerHeader />
-        <DrawerBody p={6}>
+        <DrawerBody pt={10} px={4} pb={4} h="100dvh" flex="none">
           <Flex direction="column" flex={1} height="full">
             <Stack w="full" h="full" flex={1} spacing={6}>
               <FormComponent
@@ -258,6 +269,7 @@ export function MenuDrawer({
                 setPreferences={setPreferences}
                 computeCallback={computeCallback}
                 disabled={disabled}
+                onCloseMenu={onClose}
               />
             </Stack>
           </Flex>

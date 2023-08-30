@@ -64,7 +64,11 @@ export default function Generator() {
       const diffRemoved = arrayDifference(courses, coursesNew);
 
       const res = diffAdded.reduce((obj, course) => {
-        obj[course.code] = { [ParallelType.Lecture]: true, [ParallelType.Tutorial]: true, [ParallelType.Lab]: true };
+        obj[course.code] = {
+          [ParallelType.Lecture]: course.has[ParallelType.Lecture],
+          [ParallelType.Tutorial]: course.has[ParallelType.Tutorial],
+          [ParallelType.Lab]: course.has[ParallelType.Lab],
+        };
         return obj;
       }, { ...p });
 

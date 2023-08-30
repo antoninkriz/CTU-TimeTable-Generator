@@ -1,4 +1,4 @@
-enum Paths {
+const enum Paths {
   HOME = '/',
   GENERATOR = '/generator',
 }

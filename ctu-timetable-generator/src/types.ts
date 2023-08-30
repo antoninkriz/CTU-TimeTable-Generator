@@ -1,5 +1,5 @@
 // Data
-export enum WeekType {
+export const enum WeekType {
   Even = 'S',
   Odd = 'L',
 }
@@ -18,7 +18,7 @@ export type EventCompact = Omit<Event, 'week' | 'room' | 'start' | 'end'> & {
   end: number,
 };
 
-export enum ParallelType {
+export const enum ParallelType {
   Lecture = 'P',
   Tutorial = 'C',
   Lab = 'L',
@@ -35,9 +35,18 @@ export type ParallelCompact = Omit<Parallel, 'capacity' | 'timetable'> & {
   timetable: Array<EventCompact>
 };
 
+export type CourseOnLoad = {
+  code: string
+  name: string
+  parallels: Array<Parallel>
+};
+
 export type Course = {
   code: string
   name: string
+  has: {
+    [key in ParallelType]: boolean
+  }
   parallels: Array<Parallel>
 };
 
@@ -47,7 +56,13 @@ export type CourseCompact = Omit<Course, 'name' | 'parallels'> & {
   }
 };
 
+export type SemesterOnLoad = Array<CourseOnLoad>;
+
 export type Semester = Array<Course>;
+
+export type DataOnLoad = {
+  [key: string]: SemesterOnLoad
+};
 
 export type Data = {
   [key: string]: Semester
@@ -77,7 +92,7 @@ export type MessageData = {
   preferences: CoursePreferences
 };
 
-export enum MessageResultTypes {
+export const enum MessageResultTypes {
   PRE_INIT = 'PRE_INIT',
   INIT = 'INIT',
   STATUS = 'STATUS',

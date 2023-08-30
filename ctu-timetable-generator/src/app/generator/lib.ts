@@ -2,33 +2,48 @@ import { DATA_URL } from '@src/consts';
 import useSWRImmutable from 'swr/immutable';
 import { type MutableRefObject, useEffect, useRef } from 'react';
 import { useToast } from '@chakra-ui/react';
-import { Data, ParallelType } from '@src/types';
+import {
+  Course, type Data, type DataOnLoad, ParallelType,
+} from '@src/types';
 
-const sortData = (data: Data) => {
+const sortAndPreprocessData = (data: DataOnLoad): Data => {
   // Let's sort stuff in each semester to keep things nicely ordered
-  Object.values(data).forEach((semester) => {
-    // Sort parallels in each course in a semester
-    semester.forEach((course) => course.parallels.sort((a, b) => {
-      if (a.type === b.type) {
-        if (a.num === null || b.num === null) return 0;
-        return a.num - b.num;
-      }
+  for (const semester of Object.values(data)) {
+    for (const course of semester) {
+      // Sort parallels in each course in a semester
+      course.parallels.sort((a, b) => {
+        if (a.type === b.type) {
+          if (a.num === null || b.num === null) return 0;
+          return a.num - b.num;
+        }
 
-      if (a.type === ParallelType.Lecture) return -1;
-      if (b.type === ParallelType.Lecture) return 1;
-      if (a.type === ParallelType.Tutorial) return -1;
-      if (b.type === ParallelType.Tutorial) return 1;
-      if (a.type === ParallelType.Lab) return -1;
-      if (b.type === ParallelType.Lab) return 1;
+        if (a.type === ParallelType.Lecture) return -1;
+        if (b.type === ParallelType.Lecture) return 1;
+        if (a.type === ParallelType.Tutorial) return -1;
+        if (b.type === ParallelType.Tutorial) return 1;
+        if (a.type === ParallelType.Lab) return -1;
+        if (b.type === ParallelType.Lab) return 1;
 
-      // NO-OP. should not happen
-      return 0;
-    }));
+        // NO-OP. should not happen
+        return 0;
+      });
+    }
 
     // Sort courses in a semester
     semester.sort((c1, c2) => c1.code.localeCompare(c2.code));
-  });
-  return data;
+  }
+
+  return Object.fromEntries(Object.entries(data).map(([semesterId, semester]) => [
+    semesterId,
+    semester.map((course) => ({
+      ...course,
+      has: {
+        [ParallelType.Lecture]: course.parallels.some((parallel) => parallel.type === ParallelType.Lecture),
+        [ParallelType.Tutorial]: course.parallels.some((parallel) => parallel.type === ParallelType.Tutorial),
+        [ParallelType.Lab]: course.parallels.some((parallel) => parallel.type === ParallelType.Lab),
+      },
+    } as Course)),
+  ]));
 };
 
 export const useData = (
@@ -37,7 +52,7 @@ export const useData = (
 ) => useSWRImmutable<Data>(DATA_URL, async (key: string) => {
   try {
     const response = await fetch(key);
-    const data = sortData(await response.json());
+    const data = sortAndPreprocessData(await response.json());
     return await new Promise((resolve) => {
       setTimeout(() => {
         resolve(data);

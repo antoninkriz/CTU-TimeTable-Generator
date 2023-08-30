@@ -155,7 +155,7 @@ export function TimeTable({
   return (
     <>
       <Center h="full" w="full" flexDirection="column">
-        <HStack w="full" justifyContent="space-around" px={8}>
+        <HStack w="full" justifyContent="space-around" px={8} py={4}>
           <Button onClick={prevVariant} isDisabled={variant === 0}>
             <Icon as={IoArrowBack} />
           </Button>
@@ -164,7 +164,7 @@ export function TimeTable({
             <Icon as={IoArrowForward} />
           </Button>
         </HStack>
-        <Box mx={{ base: 0, lg: 6 }} w="full">
+        <Box w="full">
           <Heading fontSize="lg" mx={4} mt={4}>Lichý týden</Heading>
           <Box pos="relative" mt={6}>
             <Box w="stretch" h="full" pos="absolute" ml={8}>

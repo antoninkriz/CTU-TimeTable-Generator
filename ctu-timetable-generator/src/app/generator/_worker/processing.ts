@@ -76,7 +76,7 @@ type Best = {
   parallels: Array<Array<ParallelCompact>>
 };
 
-function experimental(
+function solve(
   parallelsCompact: Array<ParallelCompact[]>,
   parallelsSelected: Array<ParallelCompact>,
   timetable: LinkedList<EventCompact>[],
@@ -122,7 +122,7 @@ function experimental(
     } else if (score <= best.score) {
       // We need to go deeper, but is it worth it?
       // Yes, this path still has a chance to improve
-      experimental(parallelsCompact, parallelsSelected, timetable, best, progress, depth + 1);
+      solve(parallelsCompact, parallelsSelected, timetable, best, progress, depth + 1);
     } else {
       // Not worth it, wrong way, let's skip this path and update the progress accordingly
       let saved = 1;
@@ -157,6 +157,16 @@ export default function processData(
     parallels: [],
   };
 
+  if (parallelsCompact.length === 0) {
+    sendMessage({
+      type: MessageResultTypes.STATUS,
+      total,
+      done: total,
+    });
+
+    return best;
+  }
+
   const progress = new ProgressMeter(
     10_000,
     (n: number) => sendMessage({
@@ -166,7 +176,7 @@ export default function processData(
     }),
   );
 
-  experimental(
+  solve(
     parallelsCompact,
     [],
     Array.from({ length: 10 }, () => new LinkedList<EventCompact>()),

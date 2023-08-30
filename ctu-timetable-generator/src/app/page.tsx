@@ -15,7 +15,7 @@ import {
 } from '@chakra-ui/next-js';
 import NextLink from 'next/link';
 import {
-  IoHeart,
+  IoHeart, IoStar,
 } from 'react-icons/io5';
 import { GITHUB_URL, PERSONAL_URL } from '@src/consts';
 import paths from '@src/paths';
@@ -73,7 +73,7 @@ export default function Index() {
               neodesílá. Nikdo se nedozví, že Tě jeho přednášky netrápí. A já ušetřím za náklady na servery.
             </Text>
             <Text>
-              V mezičase se mi neboj kliknout na srdíčko na{' '}
+              V mezičase se neboj kliknout na <Icon as={IoStar} boxSize={4} color="yellow.400" /> na{' '}
               <Text as="span" whiteSpace="nowrap">
                 <Link href={GITHUB_URL} color={blueLink} fontWeight="600" target="_blank">
                   GitHubu

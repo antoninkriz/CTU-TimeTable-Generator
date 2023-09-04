@@ -124,7 +124,7 @@ def parse_parallel(par: dict[str, Any]) -> Parallel:
         capacity=par.get("capacity"),
         occupied_places=par.get("occupiedPlaces"),
         is_full=par.get("capacity", 0) != 0 and par.get("occupiedPlaces", 0) >= par.get("capacity", 0),
-        can_register=par.get("registration") == 'A',
+        can_register=par.get("registration") == "A",
         timetable=[
             TimeTable(
                 day=t["dayNumber"],

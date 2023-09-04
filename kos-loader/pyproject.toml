@@ -40,6 +40,7 @@ jobs = 0
 
 [tool.pylint.design]
 max-locals = 20
+max-attributes = 10
 min-public-methods = 0
 
 [tool.pylint.messages_control]

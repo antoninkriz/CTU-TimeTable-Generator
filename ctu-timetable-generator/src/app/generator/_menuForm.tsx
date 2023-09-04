@@ -2,7 +2,7 @@ import { useContext } from 'react';
 import {
   Alert,
   AlertIcon,
-  AlertTitle,
+  AlertTitle, Box,
   Button,
   Checkbox,
   Code,
@@ -30,7 +30,7 @@ import { Link } from '@chakra-ui/next-js';
 import { AsyncSelect, Select } from 'chakra-react-select';
 import type { SWRResponse } from 'swr';
 import type {
-  Course, Data,
+  Course, CourseAvailableOnly, Data,
 } from '@src/types';
 import { OptionClass, ParallelType } from '@src/types';
 import { GITHUB_URL } from '@src/consts';
@@ -58,6 +58,10 @@ type FormComponentProps = {
   setCourses: (courses: Array<Course>) => void
   preferences: { [courseId: string]: { [parallelType in ParallelType]: boolean } }
   setPreferences: (courseId: string, parallelType: ParallelType, value: boolean) => void
+  allowLocked: CourseAvailableOnly
+  setAllowLocked: (courseId: string, value: boolean) => void
+  allowFull: CourseAvailableOnly
+  setAllowFull: (courseId: string, value: boolean) => void
   computeCallback: () => void
   disabled: boolean
 };
@@ -70,6 +74,10 @@ function FormComponent({
   setCourses,
   preferences,
   setPreferences,
+  allowLocked,
+  setAllowLocked,
+  allowFull,
+  setAllowFull,
   computeCallback,
   disabled,
   onCloseMenu = () => {},
@@ -94,7 +102,7 @@ function FormComponent({
   const optionsCourses = data && semester !== undefined ? data[semester].map((course) => new OptionClass(course, `${course.code} | ${course.name}`)) : [];
 
   const paddingCellX = {
-    base: 2,
+    base: 1,
     md: 4,
   };
 
@@ -150,6 +158,8 @@ function FormComponent({
                 <Th px={paddingCellX}>Přednášky</Th>
                 <Th px={paddingCellX}>Cvičení</Th>
                 <Th px={paddingCellX}>Laboratoře</Th>
+                <Th px={paddingCellX}><Tooltip label={<Box textAlign="center">Brát v potaz i paralelky,<br />které nemají povolenou registraci</Box>}>🔒</Tooltip></Th>
+                <Th px={paddingCellX}><Tooltip label={<Box textAlign="center">Brát v potaz i paralelky,<br />které jsou již naplněné</Box>}>🔋</Tooltip></Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -186,6 +196,22 @@ function FormComponent({
                       />
                     )}
                   </Td>
+                  <Td px={paddingCellX}>
+                    <Checkbox
+                      defaultChecked
+                      checked={allowLocked[course.code]}
+                      onChange={(e) => setAllowLocked(course.code, e.target.checked)}
+                      isDisabled={disabled}
+                    />
+                  </Td>
+                  <Td px={paddingCellX}>
+                    <Checkbox
+                      defaultChecked
+                      checked={allowFull[course.code]}
+                      onChange={(e) => setAllowFull(course.code, e.target.checked)}
+                      isDisabled={disabled}
+                    />
+                  </Td>
                 </Tr>
               ))}
             </Tbody>
@@ -216,11 +242,15 @@ export function MenuSide({
   setCourses,
   preferences,
   setPreferences,
+  allowLocked,
+  setAllowLocked,
+  allowFull,
+  setAllowFull,
   computeCallback,
   disabled,
 }: FormComponentProps) {
   return (
-    <Flex display={{ base: 'none', xl: 'block' }} w="lg" shadow="md">
+    <Flex display={{ base: 'none', xl: 'block' }} w="xl" shadow="md">
       <Stack w="full" h="full" flex={1} spacing={6} p={6}>
         <FormComponent
           dataResponse={dataResponse}
@@ -230,6 +260,10 @@ export function MenuSide({
           setCourses={setCourses}
           preferences={preferences}
           setPreferences={setPreferences}
+          allowLocked={allowLocked}
+          setAllowLocked={setAllowLocked}
+          allowFull={allowFull}
+          setAllowFull={setAllowFull}
           computeCallback={computeCallback}
           disabled={disabled}
         />
@@ -246,6 +280,10 @@ export function MenuDrawer({
   setCourses,
   preferences,
   setPreferences,
+  allowLocked,
+  setAllowLocked,
+  allowFull,
+  setAllowFull,
   computeCallback,
   disabled,
 }: FormComponentProps) {
@@ -267,6 +305,10 @@ export function MenuDrawer({
                 setCourses={setCourses}
                 preferences={preferences}
                 setPreferences={setPreferences}
+                allowLocked={allowLocked}
+                setAllowLocked={setAllowLocked}
+                allowFull={allowFull}
+                setAllowFull={setAllowFull}
                 computeCallback={computeCallback}
                 disabled={disabled}
                 onCloseMenu={onClose}

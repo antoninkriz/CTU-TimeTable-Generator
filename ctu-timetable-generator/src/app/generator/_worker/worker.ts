@@ -22,7 +22,10 @@ addEventListener('message', async (event: MessageEvent<MessageData>) => {
   // Get courses sorted by the number of their parallels and filter out the parallels based on preferences
   const coursesSelected = Object.entries(event.data.preferences).map(([courseId, preferences]) => ({
     ...courses[courseId],
-    parallels: courses[courseId].parallels.filter((parallel) => preferences[parallel.type]),
+    parallels: courses[courseId].parallels
+      .filter((parallel) => preferences[parallel.type])
+      .filter((parallel) => event.data.allowFull[courseId] || !parallel.is_full)
+      .filter((parallel) => event.data.allowLocked[courseId] || parallel.can_register),
   })).sort((a, b) => (a.parallels.length - b.parallels.length) || (a.code.localeCompare(b.code)));
 
   const compactCourses = coursesSelected.map((course) => ({

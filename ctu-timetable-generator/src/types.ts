@@ -28,7 +28,10 @@ export type Parallel = {
   type: ParallelType
   num: number | null
   capacity: number | null
+  occupied_places: number | null
   timetable: Array<Event>
+  can_register: boolean
+  is_full: boolean
 };
 
 export type ParallelCompact = Omit<Parallel, 'capacity' | 'timetable'> & {
@@ -75,6 +78,10 @@ export type CoursePreferences = {
   }
 };
 
+export type CourseAvailableOnly = {
+  [classId: string]: boolean
+};
+
 export class OptionClass<T> {
   value: T;
 
@@ -90,6 +97,8 @@ export class OptionClass<T> {
 export type MessageData = {
   semester: Semester
   preferences: CoursePreferences
+  allowLocked: CourseAvailableOnly
+  allowFull: CourseAvailableOnly
 };
 
 export const enum MessageResultTypes {

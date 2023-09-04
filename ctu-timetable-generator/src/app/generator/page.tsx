@@ -8,7 +8,7 @@ import { arrayDifference, useToastDataWrapper } from '@src/app/generator/lib';
 import type {
   Course, CoursePreferences, MessageData, MessageResult,
 } from '@src/types';
-import { MessageResultTypes, ParallelType } from '@src/types';
+import { CourseAvailableOnly, MessageResultTypes, ParallelType } from '@src/types';
 import { MenuDrawer, MenuSide } from '@src/app/generator/_menuForm';
 import { ProgressBar } from '@src/app/generator/_progress';
 import { TimeTable } from '@src/app/generator/_timeTable';
@@ -57,11 +57,14 @@ export default function Generator() {
   const [semester, setSemester] = useState<string | undefined>(undefined);
   const [courses, setCourses] = useState<Array<Course>>([]);
   const [preferences, setPreferences] = useState<CoursePreferences>({});
+  const [allowLocked, setAllowLocked] = useState<CourseAvailableOnly>({});
+  const [allowFull, setAllowFull] = useState<CourseAvailableOnly>({});
   const setCoursesUpdatePreferences = (coursesNew: Array<Course>) => {
+    const diffAdded = arrayDifference(coursesNew, courses);
+    const diffRemoved = arrayDifference(courses, coursesNew);
+
     setPreferences((p) => {
       if (coursesNew.length === 0) return {};
-      const diffAdded = arrayDifference(coursesNew, courses);
-      const diffRemoved = arrayDifference(courses, coursesNew);
 
       const res = diffAdded.reduce((obj, course) => {
         obj[course.code] = {
@@ -79,6 +82,28 @@ export default function Generator() {
       return res;
     });
     setCourses(coursesNew);
+    setAllowLocked((a) => {
+      const res = diffAdded.reduce((obj, course) => {
+        obj[course.code] = true;
+        return obj;
+      }, { ...a });
+      for (const courseRemoved of diffRemoved) {
+        delete res[courseRemoved.code];
+      }
+
+      return res;
+    });
+    setAllowFull((a) => {
+      const res = diffAdded.reduce((obj, course) => {
+        obj[course.code] = true;
+        return obj;
+      }, { ...a });
+      for (const courseRemoved of diffRemoved) {
+        delete res[courseRemoved.code];
+      }
+
+      return res;
+    });
   };
   const preferencesUpdate = (courseId: string, parallelType: ParallelType, value: boolean) => setPreferences((p) => ({
     ...p,
@@ -86,6 +111,14 @@ export default function Generator() {
       ...p[courseId],
       [parallelType]: value,
     },
+  }));
+  const allowFullUpdate = (courseId: string, value: boolean) => setAllowFull((a) => ({
+    ...a,
+    [courseId]: value,
+  }));
+  const allowLockedUpdate = (courseId: string, value: boolean) => setAllowLocked((a) => ({
+    ...a,
+    [courseId]: value,
   }));
 
   const computeCallback = () => {
@@ -95,6 +128,8 @@ export default function Generator() {
       postMessage({
         semester: dataResponse.data[semester],
         preferences,
+        allowLocked,
+        allowFull,
       });
     }
   };
@@ -135,6 +170,10 @@ export default function Generator() {
           setCourses={setCoursesUpdatePreferences}
           preferences={preferences}
           setPreferences={preferencesUpdate}
+          allowLocked={allowLocked}
+          setAllowLocked={allowLockedUpdate}
+          allowFull={allowFull}
+          setAllowFull={allowFullUpdate}
           computeCallback={computeCallback}
           disabled={isComputing}
         />
@@ -150,6 +189,10 @@ export default function Generator() {
         setCourses={setCoursesUpdatePreferences}
         preferences={preferences}
         setPreferences={preferencesUpdate}
+        allowLocked={allowLocked}
+        setAllowLocked={allowLockedUpdate}
+        allowFull={allowFull}
+        setAllowFull={allowFullUpdate}
         computeCallback={computeCallback}
         disabled={isComputing}
       />

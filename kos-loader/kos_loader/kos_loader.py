@@ -84,10 +84,11 @@ async def kos_session(user: User) -> aiohttp.ClientSession:
 
     logger.info("Logging in")
 
-    # Extract XSRF cookie and save it as a permanent header
+    # Initial page load
     try:
         async with session.get(f"{KOS_API}/info"):
             pass
+        # Extract XSRF cookie and save it as a permanent header
         session.headers["X-XSRF-TOKEN"] = session.cookie_jar.filter_cookies(yarl.URL(KOS_URL))["XSRF-TOKEN"].value
     except aiohttp.ClientResponseError as ex:
         logger.exception("Login failed - Could not load the %s endpoint", f"{KOS_API}/info", exc_info=ex)
@@ -103,6 +104,7 @@ async def kos_session(user: User) -> aiohttp.ClientSession:
             resp.cookies["XSRF-TOKEN"]["expires"] = ""
             resp.cookies["XSRF-TOKEN"]["max-age"] = ""
             session.cookie_jar.update_cookies(resp.cookies, resp.url)
+        # The XSRF cookie was updated, save it as a permanent header again
         session.headers["X-XSRF-TOKEN"] = session.cookie_jar.filter_cookies(yarl.URL(KOS_URL))["XSRF-TOKEN"].value
     except aiohttp.ClientResponseError as ex:
         logger.exception("Login failed - Could not login", exc_info=ex)

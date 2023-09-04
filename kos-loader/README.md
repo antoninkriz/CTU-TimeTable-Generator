@@ -49,10 +49,18 @@ Example:
             "name": "Kvantové algoritmy a programování",
             "parallels": [
                 {
+                    // Parallel number, should not be null and should be uniqe for a course, but I can't promise anything
+                    "num": 101,
+                    // P = Lecture, C = Tutorial, L = Lab
+                    "type": "C",
                     // Parallel capacity or null
                     "capacity": 32,
-                    // Parallel number, should not be null but I can't promise anything
-                    "num": 101,
+                    // Number of spots already taken
+                    "occupied_places": 18,
+                    // Is this class full?
+                    "is_full": false,
+                    // Is it possible to join this parallel?
+                    "can_register": true,
                     // List of all events of a given parallel, this shouldn't be empty
                     "timetable": [
                         {
@@ -72,14 +80,14 @@ Example:
                                 11,
                                 0
                             ]
-                        }
+                        },
+                        // ...
                     ],
-                    // P = Lecture, C = Tutorial, L = Lab
-                    "type": "C"
                 },
                 // ...
             ]
         }
+        // ...
     ],
     // ...
 }

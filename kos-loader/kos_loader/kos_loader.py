@@ -87,18 +87,23 @@ async def kos_session(user: User) -> aiohttp.ClientSession:
     # Extract XSRF cookie and save it as a permanent header
     try:
         async with session.get(f"{KOS_API}/info"):
-            session.headers["X-XSRF-TOKEN"] = session.cookie_jar.filter_cookies(yarl.URL(KOS_URL))["XSRF-TOKEN"].value
+            pass
+        session.headers["X-XSRF-TOKEN"] = session.cookie_jar.filter_cookies(yarl.URL(KOS_URL))["XSRF-TOKEN"].value
     except aiohttp.ClientResponseError as ex:
         logger.exception("Login failed - Could not load the %s endpoint", f"{KOS_API}/info", exc_info=ex)
         raise
     except KeyError:
-        logger.error("Login failed - Missing cookie XSRF-TOKEN from the %s endpoint", f"{KOS_API}/info")
+        logger.error("Login failed - Missing cookie X-XSRF-TOKEN from the %s endpoint", f"{KOS_API}/info")
         raise
 
     # Login with the username and a password
     try:
-        async with session.post(f"{KOS_REST}/login", data=dataclasses.asdict(user)):
-            pass
+        async with session.post(f"{KOS_REST}/login", data=dataclasses.asdict(user)) as resp:
+            # Cookies expiry date and time is set to 1970 and 0, let's fix it
+            resp.cookies["XSRF-TOKEN"]["expires"] = ""
+            resp.cookies["XSRF-TOKEN"]["max-age"] = ""
+            session.cookie_jar.update_cookies(resp.cookies, resp.url)
+        session.headers["X-XSRF-TOKEN"] = session.cookie_jar.filter_cookies(yarl.URL(KOS_URL))["XSRF-TOKEN"].value
     except aiohttp.ClientResponseError as ex:
         logger.exception("Login failed - Could not login", exc_info=ex)
         raise
@@ -120,8 +125,8 @@ async def load_data(session: aiohttp.ClientSession, request: Request, parser: Ca
         logger.exception("Failed to load %s", request, exc_info=ex)
         raise
     except KeyError as ex:
-        logger.error('Failed to load %s, missing key "elements"', request)
-        raise ValueError('Invalid response - missing key "elements"') from ex
+        logger.error("Failed to load %s, missing key 'elements'", request)
+        raise ValueError("Invalid response - missing key 'elements'") from ex
 
 
 async def main():

@@ -69,6 +69,9 @@ class Parallel(CanExclude):
     type: ParallelType
     num: Optional[int]
     capacity: Optional[int]
+    occupied_places: Optional[int]
+    is_full: bool
+    can_register: bool
     timetable: list[TimeTable]
 
     def dict_factory(self) -> dict[str, Any]:
@@ -119,6 +122,9 @@ def parse_parallel(par: dict[str, Any]) -> Parallel:
         type=par["parallelType"]["code"],
         num=par.get("parallelNumber"),
         capacity=par.get("capacity"),
+        occupied_places=par.get("occupiedPlaces"),
+        is_full=par.get("capacity", 0) != 0 and par.get("occupiedPlaces", 0) >= par.get("capacity", 0),
+        can_register=par.get("registration") == 'A',
         timetable=[
             TimeTable(
                 day=t["dayNumber"],

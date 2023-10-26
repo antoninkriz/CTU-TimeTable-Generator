@@ -6,8 +6,10 @@ import datetime
 import itertools
 import json
 import logging
+import math
 import os
 import pathlib
+import random
 import sys
 from typing import Any, Callable, TypeVar
 
@@ -15,7 +17,7 @@ import aiofiles
 import aiohttp
 import yarl
 
-from kos_loader.consts import KOS_API, KOS_HOST, KOS_REST, KOS_URL
+from kos_loader.consts import KOS_API, KOS_HOST, KOS_REST, KOS_URL, PAGINATION
 from kos_loader.lib import JSONEncoder, Timer
 from kos_loader.requests import Request, parse_course, parse_parallel, parse_semester, req_courses, req_parallels, req_semesters
 
@@ -117,17 +119,38 @@ async def kos_session(user: User) -> aiohttp.ClientSession:
 ParserResultT = TypeVar("ParserResultT")
 
 
-async def load_data(session: aiohttp.ClientSession, request: Request, parser: Callable[[dict[str, Any]], ParserResultT]) -> list[ParserResultT]:
+async def load_data(session: aiohttp.ClientSession, request: Request, parser: Callable[[dict[str, Any]], ParserResultT], *, sleep: int | float | bool | None = None) -> tuple[list[ParserResultT], int]:
     """Load data from the KOS API and parse it"""
+
+    timer = Timer()
     try:
-        async with session.get(**request) as resp:
-            data: list[dict[str, Any]] = (await resp.json())["elements"]
-            return list(filter(lambda x: x is not None, (parser(element) for element in data)))
+        if sleep is None or sleep == False:
+            delay = 0
+        elif sleep == True:
+            delay = random.random() * 5
+        else:
+            delay = sleep
+
+        logger.debug("Waiting for %s seconds for request %s", delay, request)
+        await asyncio.sleep(float(delay))
+
+        logger.debug("Started request %s", request)
+        timer.start()
+        async with session.get(**request) as response:
+            resp: dict[str, Any] = await response.json()
+            data: list[dict[str, Any]] = resp["elements"]
+            count: int = resp["page"]["totalElements"]
+            result = list(filter(lambda x: x is not None, (parser(element) for element in data)))
+            timer.measure()
+            logger.debug("Finished request %s in %s", request, timer)
+            return result, count
     except aiohttp.ClientResponseError as ex:
-        logger.exception("Failed to load %s", request, exc_info=ex)
+        timer.measure()
+        logger.exception("Failed to load %s in %s", request, timer, exc_info=ex)
         raise
     except KeyError as ex:
-        logger.error("Failed to load %s, missing key 'elements'", request)
+        timer.measure()
+        logger.error("Failed to load %s in %s, missing key 'elements'", request, timer)
         raise ValueError("Invalid response - missing key 'elements'") from ex
 
 
@@ -139,7 +162,7 @@ async def main():
     async with await kos_session(user) as session:
         logger.info("Downloading semesters")
         timer.start()
-        semesters = sorted(await load_data(session, req_semesters(), parse_semester), key=lambda x: x.semester_id)
+        semesters = sorted((await load_data(session, req_semesters(), parse_semester))[0], key=lambda x: x.semester_id)
         timer.measure()
         logger.info("Downloaded data in %s", timer)
 
@@ -149,14 +172,31 @@ async def main():
         sem_next = next(sem_it)
 
         logger.info("Found semesters %s", [sem_curr.semester_id, sem_next.semester_id])
-        logger.info("Downloading courses and parallels for semesters %s", [sem_curr.semester_id, sem_next.semester_id])
-
+        logger.info("Get total counts of parallels")
         timer.start()
-        courses, par_curr, par_next = await asyncio.gather(
+        (_, par_count_curr) = await load_data(session, req_parallels(sem_curr.semester_id, size=1), parse_parallel)
+        (_, par_count_next) = await load_data(session, req_parallels(sem_next.semester_id, size=1), parse_parallel)
+        timer.measure()
+        logger.info("Found %s parallels for current semester and %s for next semester in %s", par_count_curr, par_count_next, timer)
+
+        logger.info("Downloading courses and parallels for semesters %s", [sem_curr.semester_id, sem_next.semester_id])
+        timer.start()
+        data = await asyncio.gather(
             load_data(session, req_courses(), parse_course),
-            load_data(session, req_parallels(sem_curr.semester_id), parse_parallel),
-            load_data(session, req_parallels(sem_next.semester_id), parse_parallel),
+            *(
+                load_data(session, req_parallels(sem_curr.semester_id, size=PAGINATION, page=p), parse_parallel, sleep=p)
+                for p in range(math.ceil(par_count_curr / PAGINATION))
+            ),
+            *(
+                load_data(session, req_parallels(sem_next.semester_id, size=PAGINATION, page=p), parse_parallel, sleep=p + math.ceil(par_count_curr / PAGINATION))
+                for p in range(math.ceil(par_count_next / PAGINATION))
+            )
         )
+
+        (courses, _) = data[0]
+        par_curr = list(itertools.chain.from_iterable(x[0] for x in data[1:1 + math.ceil(par_count_curr / PAGINATION)]))
+        par_next = list(itertools.chain.from_iterable(x[0] for x in data[1 + math.ceil(par_count_curr / PAGINATION):]))
+
         timer.measure()
         logger.info("Downloaded data in %s", timer)
 

@@ -150,17 +150,17 @@ class Request(TypedDict):
     params: dict[str, str | int]
 
 
-def req_semesters(*, size: int = 0, page = 0) -> Request:
+def req_semesters(*, size: int = 0, page=0) -> Request:
     """Factory for the Request to the /semesters endpoint"""
     return Request(url=f"{KOS_API}/semesters", params={"size": size, "page": page, "sort": "id"})
 
 
-def req_courses(*, size: int = 0, page = 0) -> Request:
+def req_courses(*, size: int = 0, page=0) -> Request:
     """Factory for the Request to the /courses endpoint"""
     return Request(url=f"{KOS_API}/courses", params={"size": size, "page": page, "sort": "id"})
 
 
-def req_parallels(semester: str, *, size: int = 0, page = 0) -> Request:
+def req_parallels(semester: str, *, size: int = 0, page=0) -> Request:
     """Factory for the Request to the /timetables/parallel-classes endpoint"""
     return Request(
         url=f"{KOS_API}/timetables/parallel-classes",

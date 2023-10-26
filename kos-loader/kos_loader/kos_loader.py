@@ -25,8 +25,6 @@ LOG_LEVELS = {"debug": logging.DEBUG, "info": logging.INFO, "warn": logging.WARN
 logging.basicConfig(level=LOG_LEVELS[os.environ.get("LOGLEVEL", "info").lower()])
 logger = logging.getLogger("kos_loader")
 
-timer = Timer()
-
 
 async def on_request_start(_: aiohttp.ClientSession, __: Any, params: aiohttp.TraceRequestStartParams):
     """Debug print for aiohttp client"""
@@ -119,14 +117,16 @@ async def kos_session(user: User) -> aiohttp.ClientSession:
 ParserResultT = TypeVar("ParserResultT")
 
 
-async def load_data(session: aiohttp.ClientSession, request: Request, parser: Callable[[dict[str, Any]], ParserResultT], *, sleep: int | float | bool | None = None) -> tuple[list[ParserResultT], int]:
+async def load_data(
+    session: aiohttp.ClientSession, request: Request, parser: Callable[[dict[str, Any]], ParserResultT], *, sleep: int | float | bool | None = None
+) -> tuple[list[ParserResultT], int]:
     """Load data from the KOS API and parse it"""
 
     timer = Timer()
     try:
-        if sleep is None or sleep == False:
-            delay = 0
-        elif sleep == True:
+        if sleep is None or sleep is False:
+            delay: int | float = 0
+        elif sleep is True:
             delay = random.random() * 5
         else:
             delay = sleep
@@ -156,6 +156,8 @@ async def load_data(session: aiohttp.ClientSession, request: Request, parser: Ca
 
 async def main():
     """Main function"""
+    timer = Timer()
+
     path = get_output_file_path()
     user = load_user()
 
@@ -188,14 +190,16 @@ async def main():
                 for p in range(math.ceil(par_count_curr / PAGINATION))
             ),
             *(
-                load_data(session, req_parallels(sem_next.semester_id, size=PAGINATION, page=p), parse_parallel, sleep=p + math.ceil(par_count_curr / PAGINATION))
+                load_data(
+                    session, req_parallels(sem_next.semester_id, size=PAGINATION, page=p), parse_parallel, sleep=p + math.ceil(par_count_curr / PAGINATION)
+                )
                 for p in range(math.ceil(par_count_next / PAGINATION))
-            )
+            ),
         )
 
         (courses, _) = data[0]
-        par_curr = list(itertools.chain.from_iterable(x[0] for x in data[1:1 + math.ceil(par_count_curr / PAGINATION)]))
-        par_next = list(itertools.chain.from_iterable(x[0] for x in data[1 + math.ceil(par_count_curr / PAGINATION):]))
+        par_curr = list(itertools.chain.from_iterable(x[0] for x in data[1 : 1 + math.ceil(par_count_curr / PAGINATION)]))
+        par_next = list(itertools.chain.from_iterable(x[0] for x in data[1 + math.ceil(par_count_curr / PAGINATION) :]))
 
         timer.measure()
         logger.info("Downloaded data in %s", timer)

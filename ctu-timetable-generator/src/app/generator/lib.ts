@@ -83,7 +83,7 @@ export function useToastDataWrapper() {
       }), {
         loading: {
           title: 'Načítání dat',
-          description: 'To může chviklu trvat',
+          description: 'To může chvilku trvat',
           duration: null,
         },
         success: {

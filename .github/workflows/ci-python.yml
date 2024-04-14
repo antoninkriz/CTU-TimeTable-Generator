@@ -23,7 +23,7 @@ jobs:
         uses: ./.github/actions/setup-python-poetry
         with:
           python-version: 3.11.4
-          poetry-version: 1.5.1
+          poetry-version: 1.8.2
           path: kos-loader
 
       - name: Black
@@ -46,7 +46,7 @@ jobs:
         uses: ./.github/actions/setup-python-poetry
         with:
           python-version: 3.11.4
-          poetry-version: 1.5.1
+          poetry-version: 1.8.2
           path: kos-loader
 
       - name: Mypy - type checking
@@ -64,7 +64,7 @@ jobs:
         uses: ./.github/actions/setup-python-poetry
         with:
           python-version: 3.11.4
-          poetry-version: 1.5.1
+          poetry-version: 1.8.2
           path: kos-loader
 
       - name: PyLint - linter

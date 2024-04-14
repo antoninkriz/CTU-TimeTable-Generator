@@ -42,13 +42,12 @@ jobs:
         retention-days: 3
 
     - name: Push git subdirectory as branch
-      uses: s0/git-publish-subdir-action@v2.6.0
-      env:
-        REPO: self
-        BRANCH: data
-        FOLDER: kos-loader/build
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SKIP_EMPTY_COMMITS: true
-        SQUASH_HISTORY: true
-        COMMIT_NAME: 'github-actions[bot]'
-        COMMIT_EMAIL: 'github-actions[bot]@users.noreply.github.com'
+      uses: JamesIves/github-pages-deploy-action@v4
+      with:
+        branch: data
+        folder: kos-loader/build
+        token: ${{ secrets.GITHUB_TOKEN }}
+        git-config-name: 'github-actions[bot]'
+        git-config-email: 'github-actions[bot]@users.noreply.github.com'
+        single-commit: true
+        commit-message: "Update data"

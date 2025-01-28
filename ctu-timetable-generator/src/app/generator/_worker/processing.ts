@@ -8,7 +8,7 @@ function scoreTimetable(timetable: LinkedList<EventCompact>[]) {
 
   for (const dayList of timetable) {
     if (dayList.isEmpty()) continue;
-    // Penalty for each day, therefore fewer days taken equals better score
+    // Penalty for each day, therefore fewer days taken equals better (lower) score
     score += 24 * 60;
 
     const { start } = dayList.begin().value;
@@ -18,6 +18,7 @@ function scoreTimetable(timetable: LinkedList<EventCompact>[]) {
       end = event.value.end;
     }
 
+    // Penalty calculated as the difference between the beginning of the first class and the end of the last class
     score += end - start;
   }
 
@@ -92,8 +93,9 @@ function solve(
   for (const parallel of parallelsCompact[depth]) {
     parallelsSelected[depth] = parallel;
 
-    // Add parallel to the timetable, false on collision
-    if (!timeTableAddParallel(timetable, parallel, addedNodes)) {
+    // Skip if the parallel has no events (https://github.com/antoninkriz/CTU-TimeTable-Generator/issues/3
+    // Add parallel to the timetable, returned false means collision, skip this parallel
+    if (parallel.timetable.length === 0 || !timeTableAddParallel(timetable, parallel, addedNodes)) {
       let saved = 1;
       for (let i = depth + 1; i < parallelsCompact.length; i++) {
         saved *= parallelsCompact[i].length;

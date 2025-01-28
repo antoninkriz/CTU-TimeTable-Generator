@@ -37,7 +37,7 @@ async def on_request_end(_: aiohttp.ClientSession, __: Any, params: aiohttp.Trac
 
 
 def get_output_file_path() -> pathlib.Path:
-    """Get path to the output file from the program argument and create the folder if it donesn't exist yet"""
+    """Get path to the output file from the program argument and create the folder if it doesn't exist yet"""
     if len(sys.argv) != 2:
         logger.error("This program needs exactly one argument with the path of the output file")
         raise ValueError("Missing file path program argument")

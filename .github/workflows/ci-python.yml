@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   code_format:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -22,8 +22,8 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup-python-poetry
         with:
-          python-version: 3.11.4
-          poetry-version: 1.8.2
+          python-version: 3.13.1
+          poetry-version: 2.0.1
           path: kos-loader
 
       - name: Black
@@ -37,7 +37,7 @@ jobs:
         run: poetry run isort --check ./kos_loader
 
   type_check:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -45,8 +45,8 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup-python-poetry
         with:
-          python-version: 3.11.4
-          poetry-version: 1.8.2
+          python-version: 3.13.1
+          poetry-version: 2.0.1
           path: kos-loader
 
       - name: Mypy - type checking
@@ -55,7 +55,7 @@ jobs:
         run: poetry run mypy ./kos_loader
 
   lint:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -63,8 +63,8 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup-python-poetry
         with:
-          python-version: 3.11.4
-          poetry-version: 1.8.2
+          python-version: 3.13.1
+          poetry-version: 2.0.1
           path: kos-loader
 
       - name: PyLint - linter

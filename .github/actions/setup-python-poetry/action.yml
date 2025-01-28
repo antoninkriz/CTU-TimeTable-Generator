@@ -9,7 +9,7 @@ inputs:
     description: "Poetry version"
   path:
     required: false
-    description: "Relativa path where the action should run"
+    description: "Relative path where the action should run"
 
 runs:
   using: composite
@@ -44,4 +44,3 @@ runs:
       working-directory: ${{ inputs.path }}
       shell: bash
       run: poetry install --no-interaction
-  

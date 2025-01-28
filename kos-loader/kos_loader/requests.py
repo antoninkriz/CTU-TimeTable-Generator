@@ -130,7 +130,7 @@ def parse_parallel(par: dict[str, Any]) -> Parallel:
             TimeTableEvent(
                 day=t["dayNumber"],
                 week=t.get("evenOddWeek"),
-                weeks_valid=t["weeksValid"],
+                weeks_valid=t["weeks"],
                 start=str_to_time_tuple(t["ticketStart"]),
                 end=str_to_time_tuple(t["ticketEnd"]),
                 room=t["room"]["roomNumber"] if "room" in t else None,

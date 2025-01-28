@@ -1,10 +1,10 @@
-"""Module with requests API models and helper functions for parsin the API responses"""
+"""Module with requests API models and helper functions for parsing the API responses"""
 
 import abc
 import dataclasses
 import datetime
 import enum
-from typing import Any, Optional, TypedDict
+from typing import Any, TypedDict
 
 from kos_loader.consts import KOS_API
 
@@ -31,21 +31,22 @@ class Semester(CanExclude):
 
 
 class OddEvenWeek(enum.StrEnum):
-    """Specifies the odd/event week of a time table event"""
+    """Specifies the odd/event week of a timetable event"""
 
     EVEN = "S"
     ODD = "L"
 
 
 @dataclasses.dataclass
-class TimeTable(CanExclude):
-    """Class representing a single TimeTable event"""
+class TimeTableEvent(CanExclude):
+    """Class representing a single TimeTable event, like a single lecture"""
 
     day: int
-    week: Optional[OddEvenWeek]
+    week: OddEvenWeek | None
+    weeks_valid: list[int]
     start: tuple[int, int]
     end: tuple[int, int]
-    room: Optional[str]
+    room: str | None
 
     def dict_factory(self) -> dict[str, Any]:
         return self.__dict__
@@ -67,12 +68,12 @@ class Parallel(CanExclude):
     course_id: int
     semester: str
     type: ParallelType
-    num: Optional[int]
-    capacity: Optional[int]
-    occupied_places: Optional[int]
+    num: int | None
+    capacity: int | None
+    occupied_places: int | None
     is_full: bool
     can_register: bool
-    timetable: list[TimeTable]
+    timetable: list[TimeTableEvent]
 
     def dict_factory(self) -> dict[str, Any]:
         res = self.__dict__
@@ -84,7 +85,7 @@ class Parallel(CanExclude):
 
 @dataclasses.dataclass
 class Course(CanExclude):
-    """Class represeting a single Course and its Parallels"""
+    """Class representing a single Course and its Parallels"""
 
     course_id: int
     code: str
@@ -98,7 +99,7 @@ class Course(CanExclude):
 
 
 def parse_semester(sem: dict[str, Any]) -> Semester:
-    """Parse Semesters out of an API reponse"""
+    """Parse Semesters out of an API response"""
     return Semester(
         semester_id=sem["id"],
         name=sem["nameCs"],
@@ -114,7 +115,7 @@ def str_to_time_tuple(string: str) -> tuple[int, int]:
 
 
 def parse_parallel(par: dict[str, Any]) -> Parallel:
-    """Parse Parallels out of an API reponse"""
+    """Parse Parallels out of an API response"""
     return Parallel(
         parallel_id=par["id"],
         course_id=par["courseView"]["id"],
@@ -126,9 +127,10 @@ def parse_parallel(par: dict[str, Any]) -> Parallel:
         is_full=par.get("capacity", 0) != 0 and par.get("occupiedPlaces", 0) >= par.get("capacity", 0),
         can_register=par.get("registration", "A") == "A",
         timetable=[
-            TimeTable(
+            TimeTableEvent(
                 day=t["dayNumber"],
                 week=t.get("evenOddWeek"),
+                weeks_valid=t["weeksValid"],
                 start=str_to_time_tuple(t["ticketStart"]),
                 end=str_to_time_tuple(t["ticketEnd"]),
                 room=t["room"]["roomNumber"] if "room" in t else None,
@@ -139,7 +141,7 @@ def parse_parallel(par: dict[str, Any]) -> Parallel:
 
 
 def parse_course(cou: dict[str, Any]) -> Course:
-    """Parse Courses out of an API reponse"""
+    """Parse Courses out of an API response"""
     return Course(course_id=cou["id"], code=cou["code"], name=cou.get("nameCs", cou.get("nameEn")), parallels=[])
 
 

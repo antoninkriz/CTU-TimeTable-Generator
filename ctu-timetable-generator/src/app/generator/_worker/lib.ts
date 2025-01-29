@@ -99,14 +99,14 @@ export class LinkedList<T> {
 }
 
 export class ProgressMeter {
-  private readonly reportLevel: number;
+  private readonly howOftenReportNewProgress: number;
 
   private readonly callback: (n: number) => void;
 
   private n: number;
 
-  constructor(reportLevel: number, callback: (n: number) => void) {
-    this.reportLevel = reportLevel;
+  constructor(howOftenReportNewProgress: number, callback: (n: number) => void) {
+    this.howOftenReportNewProgress = howOftenReportNewProgress;
     this.callback = callback;
     this.n = 0;
   }
@@ -116,8 +116,8 @@ export class ProgressMeter {
     this.n += n;
 
     if (
-      n >= this.reportLevel
-      || ((oldN % this.reportLevel) + n) >= this.reportLevel
+      n >= this.howOftenReportNewProgress
+      || ((oldN % this.howOftenReportNewProgress) + n) >= this.howOftenReportNewProgress
     ) {
       this.callback(this.n);
     }

@@ -1,6 +1,7 @@
 import { useContext } from 'react';
 import {
   Alert,
+  AlertDescription,
   AlertIcon,
   AlertTitle, Box,
   Button,
@@ -36,16 +37,42 @@ import { OptionClass, ParallelType } from '@src/types';
 import { GITHUB_URL } from '@src/consts';
 import { DrawerContext } from '@src/lib';
 
-function Error({ error }: { error: any }) {
+function Error({ errorJS }: { errorJS: Error | undefined }) {
   const blueLink = useColorModeValue('blue.700', 'blue.300');
 
+  const error = !errorJS
+    ? undefined
+    : {
+      name: errorJS.name,
+      message: errorJS.message,
+      stack: errorJS.stack,
+    };
+
+  if (error) {
+    // eslint-disable-next-line no-console
+    console.error(error.name);
+    // eslint-disable-next-line no-console
+    console.error(error.message);
+    // eslint-disable-next-line no-console
+    console.error(error.stack);
+  } else {
+    // eslint-disable-next-line no-console
+    console.error("Loaded data, no data and no error, that's weird.");
+  }
+
   return (
-    <Alert status="error">
-      <AlertIcon />
-      <AlertTitle>Nastala chyba při načítání dat.</AlertTitle>
-      Prosím, vytvoř novou Issue na <Link href={GITHUB_URL} color={blueLink} fontWeight="600" target="_blank">GitHubu</Link> společně se screenshotem a blokem
-      následujícího kódu:
-      <Code>{JSON.stringify(error)}</Code>
+    <Alert status="error" flexDirection="column" justifyContent="stretch" alignItems="flex-start" gap={4}>
+      <Box display="flex" flexDirection="row">
+        <AlertIcon />
+        <AlertTitle>Nastala chyba při načítání dat.</AlertTitle>
+      </Box>
+      <AlertDescription>
+        Prosím, vytvoř novou Issue na <Link href={GITHUB_URL} color={blueLink} fontWeight="600" target="_blank">GitHubu</Link> společně s popisem chyby, screenshotem a blokem
+        následujícího kódu:
+      </AlertDescription>
+      <pre>
+        <Code width="100%" whiteSpace="pre-wrap">{error ? JSON.stringify(error, null, 4) : 'No data'}</Code>
+      </pre>
     </Alert>
   );
 }
@@ -54,8 +81,8 @@ type FormComponentProps = {
   dataResponse: SWRResponse<Data>
   semester: string | undefined
   setSemester: (semester: string | undefined) => void
-  courses: Array<Course>
-  setCourses: (courses: Array<Course>) => void
+  courses: Course[]
+  setCourses: (courses: Course[]) => void
   preferences: { [courseId: string]: { [parallelType in ParallelType]: boolean } }
   setPreferences: (courseId: string, parallelType: ParallelType, value: boolean) => void
   allowLocked: CourseAvailableOnly
@@ -85,14 +112,14 @@ function FormComponent({
   const { data, error } = dataResponse;
   const isLoaded = !dataResponse.isLoading && !dataResponse.isValidating;
 
-  if (error || (isLoaded && !data)) return <Error error={error} />;
+  if (error || (isLoaded && !data)) return <Error errorJS={error} />;
 
   const valueSemester = semester !== undefined ? new OptionClass(semester, semester) : undefined;
   const optionsSemesters = Object.keys(data || {}).map((semesterId) => new OptionClass(semesterId, semesterId));
   const valueCourses = courses.map((course) => new OptionClass(course, `${course.code} | ${course.name}`));
   const filterCourses = (
     data && semester
-      ? (inp: string, callback: (options: Array<OptionClass<Course>>) => void) => callback(
+      ? (inp: string, callback: (options: OptionClass<Course>[]) => void) => callback(
         inp.length >= 3
           ? data[semester].map((course) => new OptionClass(course, `${course.code} | ${course.name}`)).filter((x) => x.label.toLowerCase().includes(inp.toLowerCase()))
           : [],
@@ -110,8 +137,11 @@ function FormComponent({
     <>
       <Skeleton h={!isLoaded ? 28 : undefined} isLoaded={isLoaded}>
         <Text textAlign="justify">
-          Zvol semestr a předměty, respektive jejich přednášky, cvičení a laboratoře, které tě zajímají. Pokud si rovnou teď přiznáš, že nebudeš na přednášky
-          chodit, zvýšíš šanci, že ti appka dokáže najít bezkolizní rozvrh. S kolizemi (zatím) neumí pracovat.
+          Zvol semestr a předměty, respektive jejich přednášky, cvičení a laboratoře, které tě zajímají.
+          Pokud si rovnou teď přiznáš, že nebudeš na přednášky chodit, zvýšíš šanci, že ti appka dokáže najít bezkolizní
+          rozvrh. S kolizemi (zatím) neumí pracovat. Pokud se v rámci jednoho předmětu a jednoho typu hodin
+          (přednáška, cvičení, laboratoř) vyskytuje kolize nebo nějaká změna, například místnosti, v průběhu semestru,
+          považují se tyto hodiny za sloučené.
         </Text>
       </Skeleton>
       <Divider />
@@ -167,7 +197,7 @@ function FormComponent({
                 <Tr key={course.code}>
                   <Td px={paddingCellX} fontFamily="mono">{course.code}</Td>
                   <Td px={paddingCellX}>
-                    {course.has[ParallelType.Lecture] && (
+                    {course.parallels[ParallelType.Lecture].length > 0 && (
                       <Checkbox
                         defaultChecked
                         checked={preferences[course.code]?.[ParallelType.Lecture]}
@@ -177,7 +207,7 @@ function FormComponent({
                     )}
                   </Td>
                   <Td px={paddingCellX}>
-                    {course.has[ParallelType.Tutorial] && (
+                    {course.parallels[ParallelType.Tutorial].length > 0 && (
                     <Checkbox
                       defaultChecked
                       checked={preferences[course.code]?.[ParallelType.Tutorial]}
@@ -187,7 +217,7 @@ function FormComponent({
                     )}
                   </Td>
                   <Td px={paddingCellX}>
-                    {course.has[ParallelType.Lab] && (
+                    {course.parallels[ParallelType.Lab].length > 0 && (
                       <Checkbox
                         defaultChecked
                         checked={preferences[course.code]?.[ParallelType.Lab]}
@@ -294,7 +324,7 @@ export function MenuDrawer({
       <DrawerOverlay />
       <DrawerContent>
         <DrawerCloseButton />
-        <DrawerBody pt={10} px={4} pb={4} h="100dvh" flex="none">
+        <DrawerBody pt={10} px={4} pb={4} flex="none">
           <Flex direction="column" flex={1} height="full">
             <Stack w="full" h="full" flex={1} spacing={6}>
               <FormComponent

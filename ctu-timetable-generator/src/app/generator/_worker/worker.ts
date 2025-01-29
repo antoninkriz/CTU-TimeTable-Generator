@@ -1,10 +1,20 @@
 import type {
-  Course, CourseCompact, EventCompact, MessageData, MessageResult, Parallel, ParallelCompact,
+  Course, MessageData, MessageResult, Parallel,
 } from '@src/types';
-import { MessageResultTypes, ParallelType, WeekType } from '@src/types';
+import { MessageResultTypes, ParallelType } from '@src/types';
 import processData from './processing';
 
 const sendMessage = (message: MessageResult) => postMessage(message);
+
+function filterParallels(parallels: Parallel[], allowFull: boolean, allowLocked: boolean): Parallel[] {
+  return parallels
+    .filter((parallel) => allowFull || !parallel.is_full)
+    .filter((parallel) => allowLocked || parallel.can_register);
+}
+
+function courseSize(course: Course): number {
+  return course.parallels[ParallelType.Lecture].length + course.parallels[ParallelType.Tutorial].length + course.parallels[ParallelType.Lab].length;
+}
 
 // eslint-disable-next-line no-restricted-globals
 addEventListener('message', async (event: MessageEvent<MessageData>) => {
@@ -19,89 +29,53 @@ addEventListener('message', async (event: MessageEvent<MessageData>) => {
     return obj;
   }, {});
 
-  // Get courses sorted by the number of their parallels and filter out the parallels based on preferences
-  const coursesSelected = Object.entries(event.data.preferences).map(([courseId, preferences]) => ({
+  // Filter out courses based on user preferences
+  const coursesSelected: Course[] = Object.entries(event.data.preferences).map(([courseId, preferences]) => ({
     ...courses[courseId],
-    parallels: courses[courseId].parallels
-      .filter((parallel) => preferences[parallel.type])
-      .filter((parallel) => event.data.allowFull[courseId] || !parallel.is_full)
-      .filter((parallel) => event.data.allowLocked[courseId] || parallel.can_register),
-  })).sort((a, b) => (a.parallels.length - b.parallels.length) || (a.code.localeCompare(b.code)));
+    parallels: {
+      [ParallelType.Lecture]: preferences[ParallelType.Lecture]
+        ? filterParallels(courses[courseId].parallels[ParallelType.Lecture], event.data.allowFull[courseId], event.data.allowLocked[courseId])
+        : [],
+      [ParallelType.Tutorial]: preferences[ParallelType.Tutorial]
+        ? filterParallels(courses[courseId].parallels[ParallelType.Tutorial], event.data.allowFull[courseId], event.data.allowLocked[courseId])
+        : [],
+      [ParallelType.Lab]: preferences[ParallelType.Lab]
+        ? filterParallels(courses[courseId].parallels[ParallelType.Lab], event.data.allowFull[courseId], event.data.allowLocked[courseId])
+        : [],
+    },
+  })).sort((a, b) => (courseSize(a) - courseSize(b)) || (a.code.localeCompare(b.code)));
 
-  const compactCourses = coursesSelected.map((course) => ({
-    code: course.code,
-    parallels: course.parallels.reduce((obj, parallel) => {
-      obj[parallel.type].push({
-        num: parallel.num,
-        type: parallel.type,
-        timetable: parallel.timetable.reduce((arr, timeTableEvent) => {
-          if (timeTableEvent.week === null) {
-            // Push both S and L version when the week is null
-            arr.push({
-              day: timeTableEvent.day,
-              start: timeTableEvent.start[0] * 60 + timeTableEvent.start[1],
-              end: timeTableEvent.end[0] * 60 + timeTableEvent.end[1],
-              week: true,
-            } as EventCompact);
-            arr.push({
-              day: timeTableEvent.day,
-              start: timeTableEvent.start[0] * 60 + timeTableEvent.start[1],
-              end: timeTableEvent.end[0] * 60 + timeTableEvent.end[1],
-              week: false,
-            } as EventCompact);
-          } else {
-            arr.push({
-              day: timeTableEvent.day,
-              start: timeTableEvent.start[0] * 60 + timeTableEvent.start[1],
-              end: timeTableEvent.end[0] * 60 + timeTableEvent.end[1],
-              week: timeTableEvent.week === WeekType.Odd,
-            } as EventCompact);
-          }
-          return arr;
-        }, [] as Array<EventCompact>),
-      } as ParallelCompact);
-      return obj;
-    }, {
-      [ParallelType.Lecture]: [] as Array<ParallelCompact>,
-      [ParallelType.Tutorial]: [] as Array<ParallelCompact>,
-      [ParallelType.Lab]: [] as Array<ParallelCompact>,
-    }),
-  } as CourseCompact));
-
-  const coursesFlat = compactCourses.reduce((arr, course) => {
-    arr.push(...Object.values(course.parallels));
+  // Flatten the courses so that we can process them one by one
+  const coursesFlat = coursesSelected.reduce((arr, course) => {
+    arr.push([...course.parallels[ParallelType.Lecture], ...course.parallels[ParallelType.Tutorial], ...course.parallels[ParallelType.Lab]]);
     return arr;
-  }, [] as Array<ParallelCompact[]>);
+  }, [] as Parallel[][]);
 
+  // Calculate the total number of possible combinations
   const total = coursesFlat.reduce((num, parallels) => num * (parallels.length ? parallels.length : 1), 1);
-  const bests = processData(sendMessage, coursesFlat.filter((p) => p.length !== 0), total);
 
-  const boolFilter = coursesFlat.map((p) => p.length !== 0);
-  function unwrapFilteredParallels(best: ParallelCompact[]) {
-    let idx = 0;
-    return boolFilter
-      .map((bool) => (bool ? best[idx++] : undefined))
-      .map((pc, i) => {
-        if (pc === undefined) return undefined;
-        return coursesSelected[Math.floor(i / 3)].parallels.find((p) => p.type === pc.type && p.num === pc.num);
-      });
-  }
-
-  function mapToCourses(parallels: (Parallel | undefined)[]) {
-    return coursesSelected.map((course) => course.code).reduce((obj, courseId, i) => {
-      obj[courseId] = {
-        [ParallelType.Lecture]: parallels[i * 3],
-        [ParallelType.Tutorial]: parallels[i * 3 + 1],
-        [ParallelType.Lab]: parallels[i * 3 + 2],
-      };
-      return obj;
-    }, {} as { [courseId: string]: { [parallelType in ParallelType]: Parallel | undefined } });
-  }
+  // Finally process the data
+  const [courseAssignment, coursesParallelFlat] = coursesSelected.reduce((arr, course) => {
+    if (course.parallels[ParallelType.Lecture].length !== 0) {
+      arr[0].push(course);
+      arr[1].push(course.parallels[ParallelType.Lecture]);
+    }
+    if (course.parallels[ParallelType.Tutorial].length !== 0) {
+      arr[0].push(course);
+      arr[1].push(course.parallels[ParallelType.Tutorial]);
+    }
+    if (course.parallels[ParallelType.Lab].length !== 0) {
+      arr[0].push(course);
+      arr[1].push(course.parallels[ParallelType.Lab]);
+    }
+    return arr;
+  }, [[], []] as [Course[], Parallel[][]]);
+  const bests = processData(sendMessage, coursesParallelFlat, total);
 
   // Send result
   sendMessage({
     type: MessageResultTypes.RESULT,
-    data: bests.parallels.map(unwrapFilteredParallels).map(mapToCourses),
+    data: bests.all_best_parallels_combinations.map((parallels) => parallels.map((parallel, idx) => [courseAssignment[idx], parallel] as [Course, Parallel])),
     total,
     done: total,
   });

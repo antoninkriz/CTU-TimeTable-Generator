@@ -51,15 +51,15 @@ function Intro() {
 export default function Generator() {
   const dataResponse = useToastDataWrapper();
 
-  const [variant, setVariant] = useState(0);
+  const [variantNumber, setVariantNumber] = useState(0);
   const [isComputing, setIsComputing] = useState(false);
   const [result, postMessage] = useDataWorker();
   const [semester, setSemester] = useState<string | undefined>(undefined);
-  const [courses, setCourses] = useState<Array<Course>>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [preferences, setPreferences] = useState<CoursePreferences>({});
   const [allowLocked, setAllowLocked] = useState<CourseAvailableOnly>({});
   const [allowFull, setAllowFull] = useState<CourseAvailableOnly>({});
-  const setCoursesUpdatePreferences = (coursesNew: Array<Course>) => {
+  const setCoursesUpdatePreferences = (coursesNew: Course[]) => {
     const diffAdded = arrayDifference(coursesNew, courses);
     const diffRemoved = arrayDifference(courses, coursesNew);
 
@@ -68,9 +68,9 @@ export default function Generator() {
 
       const res = diffAdded.reduce((obj, course) => {
         obj[course.code] = {
-          [ParallelType.Lecture]: course.has[ParallelType.Lecture],
-          [ParallelType.Tutorial]: course.has[ParallelType.Tutorial],
-          [ParallelType.Lab]: course.has[ParallelType.Lab],
+          [ParallelType.Lecture]: course.parallels[ParallelType.Lecture].length > 0,
+          [ParallelType.Tutorial]: course.parallels[ParallelType.Tutorial].length > 0,
+          [ParallelType.Lab]: course.parallels[ParallelType.Lab].length > 0,
         };
         return obj;
       }, { ...p });
@@ -124,7 +124,7 @@ export default function Generator() {
   const computeCallback = () => {
     if (dataResponse.data && semester) {
       setIsComputing(true);
-      setVariant(0);
+      setVariantNumber(0);
       postMessage({
         semester: dataResponse.data[semester],
         preferences,
@@ -135,11 +135,11 @@ export default function Generator() {
   };
 
   const nextVariant = () => {
-    if (result.type === MessageResultTypes.RESULT && variant < result.data.length - 1) setVariant(variant + 1);
+    if (result.type === MessageResultTypes.RESULT && variantNumber < result.data.length - 1) setVariantNumber(variantNumber + 1);
   };
 
   const prevVariant = () => {
-    if (variant > 0) setVariant(variant - 1);
+    if (variantNumber > 0) setVariantNumber(variantNumber - 1);
   };
 
   if (isComputing && result.type === MessageResultTypes.RESULT) setIsComputing(false);
@@ -151,7 +151,7 @@ export default function Generator() {
       content = <ProgressBar result={result} />;
       break;
     case MessageResultTypes.RESULT:
-      content = <TimeTable result={result} variant={variant} nextVariant={nextVariant} prevVariant={prevVariant} />;
+      content = <TimeTable result={result} variantNumber={variantNumber} nextVariant={nextVariant} prevVariant={prevVariant} />;
       break;
     case MessageResultTypes.PRE_INIT:
     default:

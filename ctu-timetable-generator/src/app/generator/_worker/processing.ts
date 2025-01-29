@@ -1,9 +1,10 @@
 import { LinkedList, LinkedListNode, ProgressMeter } from '@src/app/generator/_worker/lib';
+import { calcTimeDiff } from '@src/app/generator/lib';
 import {
-  MessageResultTypes, type MessageResult, type ParallelCompact, type EventCompact,
+  MessageResultTypes, WeekType, type Best, type MessageResult, type Parallel, type TimeTableEvent,
 } from '@src/types';
 
-function scoreTimetable(timetable: LinkedList<EventCompact>[]) {
+function scoreTimetable(timetable: LinkedList<TimeTableEvent>[]) {
   let score = 0;
 
   for (const dayList of timetable) {
@@ -18,20 +19,20 @@ function scoreTimetable(timetable: LinkedList<EventCompact>[]) {
       end = event.value.end;
     }
 
-    // Penalty calculated as the difference between the beginning of the first class and the end of the last class
-    score += end - start;
+    // Penalty calculated as the difference between the beginning of the first class and the end of the last class.
+    score += calcTimeDiff(end, start);
   }
 
   return score;
 }
 
 function timeTableAddParallel(
-  timetable: LinkedList<EventCompact>[],
-  parallel: ParallelCompact,
-  addedNodes: Array<LinkedListNode<EventCompact>[]>,
+  timetable: LinkedList<TimeTableEvent>[],
+  parallel: Parallel,
+  addedNodes: LinkedListNode<TimeTableEvent>[][],
 ): boolean {
   for (const eventNew of parallel.timetable) {
-    const dayIdx = (eventNew.day - 1) + (eventNew.week ? 5 : 0);
+    const dayIdx = (eventNew.day - 1) + (eventNew.week === WeekType.Even ? 5 : 0);
     const singleDay = timetable[dayIdx];
 
     if (singleDay.isEmpty()) {
@@ -41,14 +42,14 @@ function timeTableAddParallel(
 
     let success = false;
     for (const lle of singleDay) {
-      if (lle.value.start >= eventNew.end) {
-        if (lle.pre === singleDay.end() || (lle.pre !== singleDay.end() && lle.pre.value.end <= eventNew.start)) {
+      if (calcTimeDiff(lle.value.start, eventNew.end) >= 0) {
+        if (lle.pre === singleDay.end() || (lle.pre !== singleDay.end() && calcTimeDiff(lle.pre.value.end, eventNew.start) <= 0)) {
           addedNodes[dayIdx].push(singleDay.insertBefore(eventNew, lle));
           success = true;
           break;
         }
-      } else if (lle.value.end <= eventNew.start) {
-        if (lle.next === singleDay.end() || (lle.next !== singleDay.end() && lle.next.value.start >= eventNew.end)) {
+      } else if (calcTimeDiff(lle.value.end, eventNew.start) <= 0) {
+        if (lle.next === singleDay.end() || (lle.next !== singleDay.end() && calcTimeDiff(lle.next.value.start, eventNew.end) >= 0)) {
           addedNodes[dayIdx].push(singleDay.insertAfter(eventNew, lle));
           success = true;
           break;
@@ -72,21 +73,18 @@ function timeTableAddParallel(
   return true;
 }
 
-type Best = {
-  score: number,
-  parallels: Array<Array<ParallelCompact>>
-};
-
 function solve(
-  parallelsCompact: Array<ParallelCompact[]>,
-  parallelsSelected: Array<ParallelCompact>,
-  timetable: LinkedList<EventCompact>[],
+  parallelsCompact: Parallel[][],
+  parallelsSelected: Parallel[],
+  timetable: LinkedList<TimeTableEvent>[],
   best: Best,
   progress: ProgressMeter,
   depth: number,
 ) {
-  const addedNodes: Array<LinkedListNode<EventCompact>[]> = [
+  const addedNodes: LinkedListNode<TimeTableEvent>[][] = [
+    // Odd week days
     [], [], [], [], [],
+    // Even week days
     [], [], [], [], [],
   ];
 
@@ -114,12 +112,13 @@ function solve(
       progress.increment(1);
 
       if (score < best.score) {
+        // Found new best
         best.score = score;
-        best.parallels.length = 0;
-      }
-
-      if (score === best.score) {
-        best.parallels.push(parallelsSelected.slice());
+        best.all_best_parallels_combinations.length = 0;
+        best.all_best_parallels_combinations.push(parallelsSelected.slice());
+      } else if (score === best.score) {
+        // Found result as good as the current best
+        best.all_best_parallels_combinations.push(parallelsSelected.slice());
       }
     } else if (score <= best.score) {
       // We need to go deeper, but is it worth it?
@@ -144,9 +143,9 @@ function solve(
 
 export default function processData(
   sendMessage: (message: MessageResult) => void,
-  parallelsCompact: Array<ParallelCompact[]>,
+  parallelsCompact: Parallel[][],
   total: number,
-) {
+): Best {
   // Send initial progress report
   sendMessage({
     type: MessageResultTypes.STATUS,
@@ -156,7 +155,7 @@ export default function processData(
 
   const best: Best = {
     score: Number.MAX_VALUE,
-    parallels: [],
+    all_best_parallels_combinations: [],
   };
 
   if (parallelsCompact.length === 0) {
@@ -181,7 +180,7 @@ export default function processData(
   solve(
     parallelsCompact,
     [],
-    Array.from({ length: 10 }, () => new LinkedList<EventCompact>()),
+    Array.from({ length: 10 }, () => new LinkedList<TimeTableEvent>()),
     best,
     progress,
     0,

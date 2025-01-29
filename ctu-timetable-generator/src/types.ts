@@ -1,21 +1,22 @@
 // Data
 export const enum WeekType {
+  // noinspection JSUnusedGlobalSymbols
   Even = 'S',
   Odd = 'L',
 }
 
-export type Event = {
+export type TimeTableEvent = {
   day: number
-  week: WeekType | null
+  week: WeekType
+  weeks_valid: number[]
   start: [number, number]
   end: [number, number]
   room: string | null
+  is_merged: true | undefined
 };
 
-export type EventCompact = Omit<Event, 'week' | 'room' | 'start' | 'end'> & {
-  week: boolean,
-  start: number,
-  end: number,
+export type TimeTableEventOnLoad = Omit<TimeTableEvent, 'week'> & {
+  week: WeekType | null
 };
 
 export const enum ParallelType {
@@ -29,39 +30,32 @@ export type Parallel = {
   num: number | null
   capacity: number | null
   occupied_places: number | null
-  timetable: Array<Event>
+  timetable: TimeTableEvent[]
   can_register: boolean
   is_full: boolean
 };
 
-export type ParallelCompact = Omit<Parallel, 'capacity' | 'timetable'> & {
-  timetable: Array<EventCompact>
+export type ParallelOnLoad = Omit<Parallel, 'timetable'> & {
+  timetable: TimeTableEventOnLoad[]
 };
 
 export type CourseOnLoad = {
   code: string
   name: string
-  parallels: Array<Parallel>
+  parallels: ParallelOnLoad[]
 };
 
 export type Course = {
   code: string
   name: string
-  has: {
-    [key in ParallelType]: boolean
-  }
-  parallels: Array<Parallel>
-};
-
-export type CourseCompact = Omit<Course, 'name' | 'parallels'> & {
   parallels: {
-    [parallelType in ParallelType]: Array<ParallelCompact>
+    [key in ParallelType]: Parallel[]
   }
 };
 
-export type SemesterOnLoad = Array<CourseOnLoad>;
+export type SemesterOnLoad = CourseOnLoad[];
 
-export type Semester = Array<Course>;
+export type Semester = Course[];
 
 export type DataOnLoad = {
   [key: string]: SemesterOnLoad
@@ -94,6 +88,11 @@ export class OptionClass<T> {
 }
 
 // Worker
+export type Best = {
+  score: number,
+  all_best_parallels_combinations: Parallel[][]
+};
+
 export type MessageData = {
   semester: Semester
   preferences: CoursePreferences
@@ -108,17 +107,25 @@ export const enum MessageResultTypes {
   RESULT = 'RESULT',
 }
 
-export type MessageResult = {
+export type MessageResultPreInit = {
   type: MessageResultTypes.PRE_INIT
-} | {
+};
+
+export type MessageResultInit = {
   type: MessageResultTypes.INIT
-} | {
+};
+
+export type MessageResultStatus = {
   type: MessageResultTypes.STATUS
   total: number
   done: number
-} | {
+};
+
+export type MessageResultResult = {
   type: MessageResultTypes.RESULT
-  data: Array<{ [courseId: string]: { [parallelType in ParallelType]: Parallel | undefined } }>
+  data: [Course, Parallel][][]
   total: number
   done: number
 };
+
+export type MessageResult = MessageResultPreInit | MessageResultInit | MessageResultStatus | MessageResultResult;

@@ -20,5 +20,6 @@ module.exports = (/** @type {string} */ phase) => {
     output: 'export',
     reactStrictMode: true,
     swcMinify: !isDev,
+    productionBrowserSourceMaps: true,
   });
 };

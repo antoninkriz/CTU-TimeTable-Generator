@@ -35,13 +35,13 @@ runs:
       uses: actions/cache@v4
       with:
         path: ${{ inputs.path }}/.venv
-        key: python-${{ inputs.python-version }}-poetry-${{ inputs.poetry-version }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('.github/actions/setup/action.yml') }}
+        key: python-${{ inputs.python-version }}-poetry-${{ inputs.poetry-version }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('.github/actions/setup-python-poetry/action.yml') }}
 
     - name: Install dependencies
       working-directory: ${{ inputs.path }}
       if: steps.cached-dependencies.outputs.cache-hit != 'true'
       shell: bash
-      run: poetry install --no-interaction --no-root ${{ inputs.install-dev && '-E dev' }}
+      run: poetry install --no-interaction --no-root ${{ inputs.install-dev == 'true' && '-E dev' || '' }}
 
     - name: Install library
       working-directory: ${{ inputs.path }}

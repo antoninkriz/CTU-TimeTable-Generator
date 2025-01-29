@@ -7,6 +7,9 @@ inputs:
   poetry-version:
     required: true
     description: "Poetry version"
+  install-dev:
+    required: false
+    description: "Install development dependencies"
   path:
     required: false
     description: "Relative path where the action should run"
@@ -38,7 +41,7 @@ runs:
       working-directory: ${{ inputs.path }}
       if: steps.cached-dependencies.outputs.cache-hit != 'true'
       shell: bash
-      run: poetry install --no-interaction --no-root
+      run: poetry install --no-interaction --no-root ${{ inputs.install-dev && '-E dev' }}
 
     - name: Install library
       working-directory: ${{ inputs.path }}

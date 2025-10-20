@@ -1,9 +1,9 @@
 name: Fetch data
 
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: '0 */6 * * *'
+# on:
+#   workflow_dispatch:
+#   schedule:
+#     - cron: '0 */6 * * *'
 
 jobs:
   fetch-data:

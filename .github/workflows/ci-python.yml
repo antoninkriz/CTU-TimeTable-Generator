@@ -22,8 +22,8 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup-python-poetry
         with:
-          python-version: 3.13.1
-          poetry-version: 2.0.1
+          python-version: 3.14.2
+          poetry-version: 2.3.1
           path: kos-loader
           install-dev: true
 
@@ -46,8 +46,8 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup-python-poetry
         with:
-          python-version: 3.13.1
-          poetry-version: 2.0.1
+          python-version: 3.14.2
+          poetry-version: 2.3.1
           path: kos-loader
           install-dev: true
 
@@ -65,8 +65,8 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup-python-poetry
         with:
-          python-version: 3.13.1
-          poetry-version: 2.0.1
+          python-version: 3.14.2
+          poetry-version: 2.3.1
           path: kos-loader
           install-dev: true
 

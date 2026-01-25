@@ -1,4 +1,5 @@
 name: Setup Python and Poetry
+description: "Set up Python and Poetry environment"
 
 inputs:
   python-version:

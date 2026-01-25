@@ -1,9 +1,25 @@
 name: Fetch data
 
-# on:
-#   workflow_dispatch:
-#   schedule:
-#     - cron: '0 */6 * * *'
+on:
+  workflow_dispatch:
+    inputs:
+      jsessionid_enc:
+        description: "Encrypted base64 cookie value for JSESSIONID"
+        required: true
+        type: string
+      xsrf_token_enc:
+        description: "Encrypted base64 cookie value for XSRF-TOKEN"
+        required: true
+        type: string
+      bigipserverfarm_is_stud_newkos_https_enc:
+        description: "Encrypted base64 cookie value for BIGipServerFARM-IS-STUD-NEWKOS-HTTPS"
+        required: false
+        type: string
+      msal_cache_encryption_enc:
+        description: "Encrypted base64 cookie value for msal.cache.encryption"
+        required: false
+        type: string
+
 
 jobs:
   fetch-data:
@@ -13,6 +29,9 @@ jobs:
       contents: write
     strategy:
       fail-fast: true
+      matrix:
+        python-version: [3.14.2]
+        poetry-version: [2.3.1]
 
     steps:
     - name: Check out repository
@@ -21,16 +40,19 @@ jobs:
     - name: Setup
       uses: ./.github/actions/setup-python-poetry
       with:
-        python-version: 3.13.1
-        poetry-version: 2.0.1
+        python-version: ${{ matrix.python-version }}
+        poetry-version: ${{ matrix.poetry-version }}
         path: kos-loader
 
     - name: Fetch data
       working-directory: kos-loader
       shell: bash
       env:
-        KOS_USERNAME: ${{ secrets.KOS_USERNAME }}
-        KOS_PASSWORD: ${{ secrets.KOS_PASSWORD }}
+        COOKIES_PRIVATE_KEY: ${{ secrets.COOKIES_PRIVATE_KEY }}
+        JSESSIONID_ENC: ${{ github.event.inputs.jsessionid_enc }}
+        XSRF_TOKEN_ENC: ${{ github.event.inputs.xsrf_token_enc }}
+        BIGIPSERVERFARM_IS_STUD_NEWKOS_HTTPS_ENC: ${{ github.event.inputs.bigipserverfarm_is_stud_newkos_https_enc }}
+        MSAL_CACHE_ENCRYPTION_ENC: ${{ github.event.inputs.msal_cache_encryption_enc }}
         LOGLEVEL: info
       run: poetry run python3 -m kos_loader.kos_loader build/data.json
 

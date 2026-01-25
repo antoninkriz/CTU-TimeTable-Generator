@@ -15,11 +15,39 @@ This tool downloads data from the undocumented private KOS API using a using tra
 
 ## Usage
 
+Generate public and private keys.
+
 ```bash
-KOS_USERNAME=your_username
-KOS_PASSWORD=********
-LOGLEVEL=info
-python3 -m kos_loader.kos_loader
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out private_key.pem
+openssl rsa -in private_key.pem -pubout -out public_key.pem
+```
+
+Update the `PUB_KEY_PEM` variable in `encrypt_cookie.js`.
+
+Get cookies from browser:
+ * 1. Open kos.cvut.cz in browser
+ * 2. Login
+ * 3. Open developer console (F12)
+ * 4. Open Application tab -> Cookies -> https://kos.cvut.cz
+ * 5. Open Console
+ * 6. Paste this code in console
+ * 7. Run `await encryptCookie('<YOUR_COOKIE_VALUE>')` with copy-pasted cookie values for cookies:
+ *  - JSESSIONID
+ *  - XSRF-TOKEN
+ * 8. Copy the output values and use them as encrypted cookies in kos-loader
+
+
+```bash
+export COOKIES_PRIVATE_KEY=private key in PEM format
+
+export JSESSIONID_ENC=encrypted and base64 encoded cookie value
+export XSRF_TOKEN_ENC=...
+export BIGIPSERVERFARM_IS_STUD_NEWKOS_HTTPS_ENC=...
+export MSAL_CACHE_ENCRYPTION_ENC=...
+
+export LOGLEVEL=info
+
+python3 -m kos_loader.kos_loader 
 ```
 
 

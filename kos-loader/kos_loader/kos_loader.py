@@ -15,9 +15,11 @@ from typing import Any, Callable, TypeVar
 
 import aiofiles
 import aiohttp
-import yarl
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 
-from kos_loader.consts import KOS_API, KOS_HOST, KOS_REST, KOS_URL, PAGINATION
+from kos_loader.consts import KOS_API, KOS_HOST, PAGINATION
 from kos_loader.lib import JSONEncoder, Timer
 from kos_loader.requests import Request, parse_course, parse_parallel, parse_semester, req_courses, req_parallels, req_semesters
 
@@ -52,63 +54,116 @@ def get_output_file_path() -> pathlib.Path:
     return path
 
 
+def decrypt_string(key: RSAPrivateKey, ciphertext_b64: str) -> str:
+    """Decrypt base64 encoded ciphertext with the given private key"""
+    import base64
+
+    ciphertext = base64.b64decode(ciphertext_b64)
+    plaintext = key.decrypt(
+        ciphertext,
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None,
+        ),
+    )
+    return plaintext.decode("utf-8")
+
+
 @dataclasses.dataclass
-class User:
-    """KOS User login credentials class"""
+class Cookies:
+    """KOS User cookies"""
 
-    username: str
-    password: str
+    jsessionid: str
+    xsrf_token: str
+    bigipserverfarm_is_stud_newkos_https: str
+    msal_cache_encryption: str
 
 
-def load_user() -> User | None:
-    """Load KOS user login credentials from env"""
+def load_cookies() -> Cookies:
+    """Load KOS user cookies from env"""
     logging.debug("Loading user from env")
-    username = os.environ.get("KOS_USERNAME")
-    password = os.environ.get("KOS_PASSWORD")
 
-    if username is None or password is None:
-        logger.error("Missing env vars with username and/or password")
-        raise ValueError("User could not be laoded")
+    private_key_pem = os.environ.get("COOKIES_PRIVATE_KEY")
+    if private_key_pem is None:
+        logger.error("Missing env var with COOKIES_PRIVATE_KEY")
+        raise ValueError("Cookies could not be loaded")
 
-    return User(username=username, password=password)
+    jsessionid_enc = os.environ.get("JSESSIONID_ENC")
+    xsrf_token_enc = os.environ.get("XSRF_TOKEN_ENC")
+    bigipserverfarm_is_stud_newkos_https = os.environ.get("BIGIPSERVERFARM_IS_STUD_NEWKOS_HTTPS_ENC")
+    msal_cache_encryption = os.environ.get("MSAL_CACHE_ENCRYPTION_ENC")
+
+    if jsessionid_enc is None or xsrf_token_enc is None or bigipserverfarm_is_stud_newkos_https is None or msal_cache_encryption is None:
+        logger.error("Missing env vars with encrypted cookies")
+        raise ValueError("Cookies could not be loaded")
+
+    private_key = serialization.load_pem_private_key(private_key_pem.encode(), password=None)
+    if not isinstance(private_key, RSAPrivateKey):
+        logger.error("Invalid private key type for COOKIES_PRIVATE_KEY")
+        raise ValueError("Cookies could not be loaded")
+
+    jsessionid = decrypt_string(private_key, jsessionid_enc)
+    xsrf_token = decrypt_string(private_key, xsrf_token_enc)
+    bigipserverfarm_is_stud_newkos_https = decrypt_string(private_key, bigipserverfarm_is_stud_newkos_https)
+    msal_cache_encryption = decrypt_string(private_key, msal_cache_encryption)
+    print(jsessionid)
+    print(xsrf_token)
+
+    return Cookies(
+        jsessionid=jsessionid,
+        xsrf_token=xsrf_token,
+        bigipserverfarm_is_stud_newkos_https=bigipserverfarm_is_stud_newkos_https,
+        msal_cache_encryption=msal_cache_encryption,
+    )
 
 
-async def kos_session(user: User) -> aiohttp.ClientSession:
+async def kos_session(user: Cookies) -> aiohttp.ClientSession:
     """Start new HTTP session with KOS user logged in"""
     trace_config = aiohttp.TraceConfig()
     trace_config.on_request_start.append(on_request_start)
     trace_config.on_request_end.append(on_request_end)
 
     # This is OK since aiohttp.ClientSession.__aenter__(...) is NOOP
-    session = aiohttp.ClientSession(headers={"Host": KOS_HOST}, trace_configs=[trace_config], raise_for_status=True)
+    session = aiohttp.ClientSession(
+        headers={
+            "Host": KOS_HOST,
+            "Accept": "application/json",
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
+        },
+        trace_configs=[trace_config],
+        raise_for_status=True,
+    )
+    session.cookie_jar.update_cookies(
+        {
+            "JSESSIONID": user.jsessionid,
+            "XSRF-TOKEN": user.xsrf_token,
+            "BIGipServerFARM-IS-STUD-NEWKOS-HTTPS": user.bigipserverfarm_is_stud_newkos_https,
+            "msal.cache.encryption": user.msal_cache_encryption,
+        }
+    )
 
-    logger.info("Logging in")
+    logger.info("Testing KOS session")
 
-    # Initial page load
-    try:
-        async with session.get(f"{KOS_API}/info"):
-            pass
-        # Extract XSRF cookie and save it as a permanent header
-        session.headers["X-XSRF-TOKEN"] = session.cookie_jar.filter_cookies(yarl.URL(KOS_URL))["XSRF-TOKEN"].value
-    except aiohttp.ClientResponseError as ex:
-        logger.exception("Login failed - Could not load the %s endpoint", f"{KOS_API}/info", exc_info=ex)
-        raise
-    except KeyError:
-        logger.error("Login failed - Missing cookie X-XSRF-TOKEN from the %s endpoint", f"{KOS_API}/info")
-        raise
-
-    # Login with the username and a password
-    try:
-        async with session.post(f"{KOS_REST}/login", data=dataclasses.asdict(user)) as resp:
-            # Cookies expiry date and time is set to 1970 and 0, let's fix it
-            resp.cookies["XSRF-TOKEN"]["expires"] = ""
-            resp.cookies["XSRF-TOKEN"]["max-age"] = ""
-            session.cookie_jar.update_cookies(resp.cookies, resp.url)
-        # The XSRF cookie was updated, save it as a permanent header again
-        session.headers["X-XSRF-TOKEN"] = session.cookie_jar.filter_cookies(yarl.URL(KOS_URL))["XSRF-TOKEN"].value
-    except aiohttp.ClientResponseError as ex:
-        logger.exception("Login failed - Could not login", exc_info=ex)
-        raise
+    # Try to access user info endpoint to verify if the cookies are valid
+    ATTEMPTS = 5
+    for attempt in range(ATTEMPTS):
+        try:
+            async with session.get(f"{KOS_API}/me") as resp:
+                response = await resp.json()
+                assert "person" in response
+                assert "id" in response["person"] and isinstance(response["person"]["id"], int)
+                assert "username" in response["person"] and isinstance(response["person"]["username"], str)
+                logger.info("KOS session is valid", response)
+                break
+        except (aiohttp.ClientResponseError, AssertionError) as ex:
+            logger.exception("KOS session is not valid - could not access user info", exc_info=ex)
+            if attempt < ATTEMPTS - 1:
+                logger.info("Retrying in 2 seconds...")
+                await asyncio.sleep(2)
+            else:
+                logger.error("All attempts to verify KOS session failed")
+                raise
 
     # Return the session with cookies and headers set
     return session
@@ -159,9 +214,9 @@ async def main():
     timer = Timer()
 
     path = get_output_file_path()
-    user = load_user()
+    cookies = load_cookies()
 
-    async with await kos_session(user) as session:
+    async with await kos_session(cookies) as session:
         logger.info("Downloading semesters")
         timer.start()
         semesters = sorted((await load_data(session, req_semesters(), parse_semester))[0], key=lambda x: x.semester_id)

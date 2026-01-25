@@ -2,23 +2,22 @@
 name = "kos-loader"
 version = "0.1.0"
 description = "Downloader of time schedule data from the KOS API"
-requires-python = "^3.13"
+requires-python = "^3.14"
 authors = [
   { name = "Antonín Kříž", email = "<15214494+antoninkriz@users.noreply.github.com>" }
 ]
 license = "MIT"
 readme = "README.md"
 keywords = ["ctu", "cvut", "fit", "timetable", "generator", "optimization", "kos", "api", "downloader"]
-classifier = [
+classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
   "Intended Audience :: Education",
-  "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
-  "Programming Language :: TypeScript",
+  "Programming Language :: Python :: 3.14",
   "Framework :: AsyncIO",
   "Framework :: aiohttp",
   "Operating System :: POSIX :: Linux",
@@ -31,7 +30,8 @@ classifier = [
 dependencies = [
   "aiofiles>=24.1.0,<25.0.0",
   "aiohttp>=3.11.11,<4.0.0",
-  "yarl>=1.18.3,<2.0.0"
+  "yarl>=1.18.3,<2.0.0",
+  "cryptography>=46.0.3,<47.0.0"
 ]
 
 [project.optional-dependencies]
@@ -48,10 +48,6 @@ homepage = "https://github.com/antoninkriz/CTU-TimeTable-Generator"
 
 [tool.poetry]
 packages = [{ include = "kos_loader" }]
-
-[[tool.poetry.source]]
-name = "PyPI"
-priority = "primary"
 
 [build-system]
 requires = ["poetry-core"]

@@ -1,6 +1,7 @@
 """Main kos_loader module"""
 
 import asyncio
+import base64
 import dataclasses
 import datetime
 import itertools
@@ -56,8 +57,6 @@ def get_output_file_path() -> pathlib.Path:
 
 def decrypt_string(key: RSAPrivateKey, ciphertext_b64: str) -> str:
     """Decrypt base64 encoded ciphertext with the given private key"""
-    import base64
-
     ciphertext = base64.b64decode(ciphertext_b64)
     plaintext = key.decrypt(
         ciphertext,
@@ -146,19 +145,19 @@ async def kos_session(user: Cookies) -> aiohttp.ClientSession:
     logger.info("Testing KOS session")
 
     # Try to access user info endpoint to verify if the cookies are valid
-    ATTEMPTS = 5
-    for attempt in range(ATTEMPTS):
+    max_attempts = 5
+    for attempt in range(max_attempts):
         try:
             async with session.get(f"{KOS_API}/me") as resp:
                 response = await resp.json()
                 assert "person" in response
                 assert "id" in response["person"] and isinstance(response["person"]["id"], int)
                 assert "username" in response["person"] and isinstance(response["person"]["username"], str)
-                logger.info("KOS session is valid", response)
+                logger.info("KOS session is valid")
                 break
         except (aiohttp.ClientResponseError, AssertionError) as ex:
             logger.exception("KOS session is not valid - could not access user info", exc_info=ex)
-            if attempt < ATTEMPTS - 1:
+            if attempt < max_attempts - 1:
                 logger.info("Retrying in 2 seconds...")
                 await asyncio.sleep(2)
             else:

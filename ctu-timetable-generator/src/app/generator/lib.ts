@@ -53,8 +53,8 @@ function mergeConflictingEventsInTimeTable(
       const newEventsThisDay: TimeTableEvent[] = [];
       const roomsSet = new Set<string>();
       for (const event of events) {
-        const lastEventEnd = newEventsThisDay[newEventsThisDay.length - 1].end;
-        if (newEventsThisDay.length === 0 || calcTimeDiff(lastEventEnd[0], lastEventEnd[1], event.start[0], event.start[1]) < 0) {
+        const lastEventEnd = newEventsThisDay.length === 0 ? null : newEventsThisDay[newEventsThisDay.length - 1].end;
+        if (lastEventEnd === null || calcTimeDiff(lastEventEnd[0], lastEventEnd[1], event.start[0], event.start[1]) < 0) {
           // No overlap with the last event
           newEventsThisDay.push(event);
           roomsSet.clear();

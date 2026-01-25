@@ -45,16 +45,7 @@ addEventListener('message', async (event: MessageEvent<MessageData>) => {
     },
   })).sort((a, b) => (courseSize(a) - courseSize(b)) || (a.code.localeCompare(b.code)));
 
-  // Flatten the courses so that we can process them one by one
-  const coursesFlat = coursesSelected.reduce((arr, course) => {
-    arr.push([...course.parallels[ParallelType.Lecture], ...course.parallels[ParallelType.Tutorial], ...course.parallels[ParallelType.Lab]]);
-    return arr;
-  }, [] as Parallel[][]);
-
-  // Calculate the total number of possible combinations
-  const total = coursesFlat.reduce((num, parallels) => num * (parallels.length ? parallels.length : 1), 1);
-
-  // Finally process the data
+  // Pre-process the data
   const [courseAssignment, coursesParallelFlat] = coursesSelected.reduce((arr, course) => {
     if (course.parallels[ParallelType.Lecture].length !== 0) {
       arr[0].push(course);
@@ -70,6 +61,11 @@ addEventListener('message', async (event: MessageEvent<MessageData>) => {
     }
     return arr;
   }, [[], []] as [Course[], Parallel[][]]);
+
+  // Calculate the total number of possible combinations
+  const total = coursesParallelFlat.reduce((num, parallels) => num * (parallels.length ? parallels.length : 1), 1);
+
+  // Process the data
   const bests = processData(sendMessage, coursesParallelFlat, total);
 
   // Send result

@@ -14,9 +14,9 @@ import {
 import { useEffect, useRef, type MutableRefObject } from 'react';
 import useSWRImmutable from 'swr/immutable';
 
-export function calcTimeDiff(a: [number, number], b: [number, number]) {
-  const aStartTime = a[0] * 60 + a[1];
-  const bStartTime = b[0] * 60 + b[1];
+export function calcTimeDiff(a0: number, a1: number, b0: number, b1: number) {
+  const aStartTime = a0 * 60 + a1;
+  const bStartTime = b0 * 60 + b1;
   return aStartTime - bStartTime;
 }
 
@@ -53,7 +53,8 @@ function mergeConflictingEventsInTimeTable(
       const newEventsThisDay: TimeTableEvent[] = [];
       const roomsSet = new Set<string>();
       for (const event of events) {
-        if (newEventsThisDay.length === 0 || calcTimeDiff(newEventsThisDay[newEventsThisDay.length - 1].end, event.start) < 0) {
+        const lastEventEnd = newEventsThisDay[newEventsThisDay.length - 1].end
+        if (newEventsThisDay.length === 0 || calcTimeDiff(lastEventEnd[0], lastEventEnd[1], event.start[0], event.start[1]) < 0) {
           // No overlap with the last event
           newEventsThisDay.push(event);
           roomsSet.clear();
@@ -102,14 +103,11 @@ const compareTimeTableEvents = (a: TimeTableEventOnLoad, b: TimeTableEventOnLoad
   if (a.week === WeekType.Even && b.week === WeekType.Odd) return 1;
 
   // Then, compare by the start time (earlier start comes first)
-  const aStartTime = a.start[0] * 60 + a.start[1];
-  const bStartTime = b.start[0] * 60 + b.start[1];
-  if (aStartTime !== bStartTime) return aStartTime - bStartTime;
+  const startTimeDiff = calcTimeDiff(a.start[0], a.start[1], b.start[0], b.start[1]);
+  if (startTimeDiff !== 0) return startTimeDiff;
 
   // Finally, compare by the end time (earlier end comes first)
-  const aEndTime = a.end[0] * 60 + a.end[1]; // convert to minutes
-  const bEndTime = b.end[0] * 60 + b.end[1]; // convert to minutes
-  return aEndTime - bEndTime;
+  return calcTimeDiff(a.end[0], a.end[1], b.end[0], b.end[1]);;
 };
 
 const processParallelByType = (parallels: ParallelOnLoad[], parallelType: ParallelType): Parallel[] =>

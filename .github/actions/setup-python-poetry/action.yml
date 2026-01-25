@@ -9,10 +9,10 @@ inputs:
     required: true
     description: "Poetry version"
   install-dev:
-    required: false
+    required: true
     description: "Install development dependencies"
   path:
-    required: false
+    required: true
     description: "Relative path where the action should run"
 
 runs:

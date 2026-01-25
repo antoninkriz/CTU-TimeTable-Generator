@@ -142,7 +142,7 @@ def parse_parallel(par: dict[str, Any]) -> Parallel:
 
 def parse_course(cou: dict[str, Any]) -> Course:
     """Parse Courses out of an API response"""
-    return Course(course_id=cou["id"], code=cou["code"], name=cou.get("nameCs", cou.get("nameEn", 'UNKNOWN')), parallels=[])
+    return Course(course_id=cou["id"], code=cou["code"], name=cou.get("nameCs", cou.get("nameEn", "UNKNOWN")), parallels=[])
 
 
 class Request(TypedDict):

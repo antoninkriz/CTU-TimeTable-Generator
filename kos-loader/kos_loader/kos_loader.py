@@ -106,8 +106,6 @@ def load_cookies() -> Cookies:
     xsrf_token = decrypt_string(private_key, xsrf_token_enc)
     bigipserverfarm_is_stud_newkos_https = decrypt_string(private_key, bigipserverfarm_is_stud_newkos_https)
     msal_cache_encryption = decrypt_string(private_key, msal_cache_encryption)
-    print(jsessionid)
-    print(xsrf_token)
 
     return Cookies(
         jsessionid=jsessionid,

@@ -43,13 +43,19 @@ function timeTableAddParallel(
     let success = false;
     for (const lle of singleDay) {
       if (calcTimeDiff(lle.value.start[0], lle.value.start[1], eventNew.end[0], eventNew.end[1]) >= 0) {
-        if (lle.pre === singleDay.end() || (lle.pre !== singleDay.end() && calcTimeDiff(lle.pre.value.end[0], lle.pre.value.end[1], eventNew.start[0], eventNew.start[1]) <= 0)) {
+        if (
+          lle.pre === singleDay.end()
+          || (lle.pre !== singleDay.end() && calcTimeDiff(lle.pre.value.end[0], lle.pre.value.end[1], eventNew.start[0], eventNew.start[1]) <= 0)
+        ) {
           addedNodes[dayIdx].push(singleDay.insertBefore(eventNew, lle));
           success = true;
           break;
         }
       } else if (calcTimeDiff(lle.value.end[0], lle.value.end[1], eventNew.start[0], eventNew.start[1]) <= 0) {
-        if (lle.next === singleDay.end() || (lle.next !== singleDay.end() && calcTimeDiff(lle.next.value.start[0], lle.next.value.start[1], eventNew.end[0], eventNew.end[1]) >= 0)) {
+        if (
+          lle.next === singleDay.end()
+          || (lle.next !== singleDay.end() && calcTimeDiff(lle.next.value.start[0], lle.next.value.start[1], eventNew.end[0], eventNew.end[1]) >= 0)
+        ) {
           addedNodes[dayIdx].push(singleDay.insertAfter(eventNew, lle));
           success = true;
           break;
@@ -94,7 +100,7 @@ function solve(
 
     // Skip if the parallel has no events (https://github.com/antoninkriz/CTU-TimeTable-Generator/issues/3
     // Add parallel to the timetable, returned false means collision, skip this parallel
-    const isCollision = parallel.timetable.length > 0 && !timeTableAddParallel(timetable, parallel, addedNodes)
+    const isCollision = parallel.timetable.length > 0 && !timeTableAddParallel(timetable, parallel, addedNodes);
     if (isCollision) {
       progress.increment(branchWeights[depth + 1]);
       continue;

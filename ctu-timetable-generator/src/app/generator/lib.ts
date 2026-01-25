@@ -53,7 +53,7 @@ function mergeConflictingEventsInTimeTable(
       const newEventsThisDay: TimeTableEvent[] = [];
       const roomsSet = new Set<string>();
       for (const event of events) {
-        const lastEventEnd = newEventsThisDay[newEventsThisDay.length - 1].end
+        const lastEventEnd = newEventsThisDay[newEventsThisDay.length - 1].end;
         if (newEventsThisDay.length === 0 || calcTimeDiff(lastEventEnd[0], lastEventEnd[1], event.start[0], event.start[1]) < 0) {
           // No overlap with the last event
           newEventsThisDay.push(event);
@@ -107,7 +107,7 @@ const compareTimeTableEvents = (a: TimeTableEventOnLoad, b: TimeTableEventOnLoad
   if (startTimeDiff !== 0) return startTimeDiff;
 
   // Finally, compare by the end time (earlier end comes first)
-  return calcTimeDiff(a.end[0], a.end[1], b.end[0], b.end[1]);;
+  return calcTimeDiff(a.end[0], a.end[1], b.end[0], b.end[1]);
 };
 
 const processParallelByType = (parallels: ParallelOnLoad[], parallelType: ParallelType): Parallel[] =>

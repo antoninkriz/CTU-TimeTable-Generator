@@ -25,17 +25,18 @@ openssl rsa -in private_key.pem -pubout -out public_key.pem
 Update the `PUB_KEY_PEM` variable in `encrypt_cookie.js`.
 
 Get cookies from browser:
- * 1. Open kos.cvut.cz in browser
- * 2. Login
- * 3. Open developer console (F12)
- * 4. Open Application tab -> Cookies -> https://kos.cvut.cz
- * 5. Open Console
- * 6. Paste this code in console
- * 7. Run `await encryptCookie('<YOUR_COOKIE_VALUE>')` with copy-pasted cookie values for cookies:
- *  - JSESSIONID
- *  - XSRF-TOKEN
- * 8. Copy the output values and use them as encrypted cookies in kos-loader
-
+1. Open kos.cvut.cz in browser
+2. Login
+3. Open developer console (F12)
+4. Open Application tab -> Cookies -> https://kos.cvut.cz
+5. Open Console
+6. Paste this code in console
+7. Run `await encryptCookie('<YOUR_COOKIE_VALUE>')` with copy-pasted cookie values for each cookie:
+   - `JSESSIONID`
+   - `XSRF-TOKEN`
+   - `BIGipServerFARM-IS-STUD-NEWKOS-HTTPS`
+   - `msal.cache.encryption`
+8. Copy the output values and use them as encrypted cookies in kos-loader
 
 ```bash
 export COOKIES_PRIVATE_KEY=private key in PEM format
